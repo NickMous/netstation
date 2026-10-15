@@ -1,0 +1,59 @@
+---
+# Boot the server into a text console instead of a desktop.
+netstation_server_headless: true
+
+# The address clients use to reach this server.
+netstation_server_ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+
+# How clients get an IP address:
+#   proxy: another DHCP server (router, Windows) hands out IPs; dnsmasq only
+#          adds the network-boot information.
+#   full:  dnsmasq is the DHCP server for the client network.
+netstation_dhcp_mode: proxy
+
+# proxy mode: the subnets dnsmasq answers PXE requests on.
+netstation_proxy_subnets:
+  - network: "{{ ansible_facts['default_ipv4']['network'] }}"
+    netmask: "{{ ansible_facts['default_ipv4']['netmask'] }}"
+
+# full mode: the address range and DNS servers handed to clients.
+netstation_dhcp_range_start: ""
+netstation_dhcp_range_end: ""
+netstation_dhcp_lease_time: 12h
+netstation_dhcp_dns_servers: []
+
+# Pin dnsmasq to an exact package version and hold it, e.g. "2.90-4~deb12u1".
+# Empty means the current Debian version, without a hold.
+netstation_dnsmasq_version: ""
+netstation_dnsmasq_log_dhcp: false
+# Extra lines appended to the dnsmasq configuration.
+netstation_dnsmasq_extra: []
+
+# Load kernel and initrd over HTTP instead of TFTP (much faster).
+netstation_http_boot: true
+
+# The image clients boot by default. Normally production; point it at another
+# image (e.g. one from before netstation) while migrating.
+netstation_default_image: "{{ netstation_image_name }}"
+
+# nginx sites to disable; the netstation site serves port 80.
+netstation_nginx_disable_sites:
+  - default
+
+# Log the session user in automatically on every client.
+netstation_autologin: true
+
+# Clients known by MAC address:
+#   - mac: "aa:bb:cc:dd:ee:ff"
+#     hostname: pc01            # optional
+#     test: true                # optional: boots staging, shows the boot menu
+#     settings: {}              # optional: extra ltsp.conf lines for this client
+netstation_clients: []
+
+# How long test clients show the production/staging menu, in milliseconds.
+netstation_test_menu_timeout: 5000
+
+# Extra ltsp.conf lines for all clients ([clients] section), as KEY: value.
+netstation_ltsp_clients_settings: {}
+# Extra ltsp.conf sections, as {section_name: {KEY: value}}.
+netstation_ltsp_sections: {}

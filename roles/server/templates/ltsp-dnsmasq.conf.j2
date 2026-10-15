@@ -1,0 +1,59 @@
+# {{ ansible_managed }}
+# Based on LTSP's ltsp-dnsmasq.conf. Don't run `ltsp dnsmasq`: it would
+# overwrite this file. Change the netstation_dhcp_* / netstation_dnsmasq_*
+# variables instead.
+
+# DHCP and TFTP only, no DNS.
+port=0
+
+enable-tftp
+tftp-root={{ netstation_tftp_dir }}
+{% if netstation_dnsmasq_log_dhcp %}
+
+log-dhcp
+{% endif %}
+
+{% if netstation_dhcp_mode == 'full' %}
+# Full DHCP: this server hands out IP addresses.
+dhcp-range={{ netstation_dhcp_range_start }},{{ netstation_dhcp_range_end }},{{ netstation_dhcp_lease_time }}
+{% if netstation_dhcp_dns_servers %}
+dhcp-option=option:dns-server,{{ netstation_dhcp_dns_servers | join(',') }}
+{% endif %}
+{% else %}
+# Proxy DHCP: another server hands out IP addresses, this one only adds
+# the network-boot information.
+{% for subnet in netstation_proxy_subnets %}
+dhcp-range=set:proxy,{{ subnet.network }},proxy,{{ subnet.netmask }}
+{% endfor %}
+{% endif %}
+
+# Client architectures.
+dhcp-match=set:X86PC,option:client-arch,0
+dhcp-match=set:X86-64_EFI,option:client-arch,7
+dhcp-match=set:X86-64_EFI,option:client-arch,9
+
+# Detect an iPXE that has the features LTSP needs.
+dhcp-match=set:ipxe-http,175,19
+dhcp-match=set:ipxe-menu,175,39
+dhcp-match=set:ipxe-pxe,175,33
+dhcp-match=set:ipxe-bzimage,175,24
+dhcp-match=set:ipxe-efi,175,36
+tag-if=set:ipxe,tag:ipxe-http,tag:ipxe-menu,tag:ipxe-pxe,tag:ipxe-bzimage
+tag-if=set:ipxe,tag:ipxe-http,tag:ipxe-menu,tag:ipxe-efi
+
+{% set ipxe_script = 'ltsp/netstation.ipxe' if netstation_http_boot else 'ltsp/ltsp.ipxe' %}
+# Firmware PXE loads iPXE; iPXE then loads {{ ipxe_script }}.
+pxe-service=tag:proxy,tag:!ipxe,X86PC,"undionly.kpxe",ltsp/undionly.kpxe
+pxe-service=tag:proxy,tag:!ipxe,X86-64_EFI,"snponly.efi",ltsp/snponly.efi
+pxe-service=tag:proxy,tag:ipxe,X86PC,"ltsp.ipxe",{{ ipxe_script }}
+pxe-service=tag:proxy,tag:ipxe,X86-64_EFI,"ltsp.ipxe",{{ ipxe_script }}
+dhcp-boot=tag:!ipxe,tag:X86PC,ltsp/undionly.kpxe
+dhcp-boot=tag:!ipxe,tag:X86-64_EFI,ltsp/snponly.efi
+dhcp-boot=tag:ipxe,{{ ipxe_script }}
+{% if netstation_dnsmasq_extra %}
+
+# Extra settings (netstation_dnsmasq_extra).
+{% for line in netstation_dnsmasq_extra %}
+{{ line }}
+{% endfor %}
+{% endif %}

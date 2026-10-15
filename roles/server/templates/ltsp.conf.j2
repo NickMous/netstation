@@ -1,0 +1,47 @@
+# {{ ansible_managed }}
+# Documentation: man ltsp.conf
+# After a change, `ltsp initrd` and `ltsp ipxe` run automatically.
+
+[server]
+# Clients boot the default image straight away, without a menu.
+DEFAULT_IMAGE="{{ netstation_default_image }}"
+MENU_TIMEOUT="-1"
+IPXE_{{ (netstation_image_name ~ '.img') | upper | regex_replace('[^A-Z0-9]', '_') }}="Production"
+IPXE_{{ (netstation_staging_image_name ~ '.img') | upper | regex_replace('[^A-Z0-9]', '_') }}="Staging"
+
+[clients]
+{% if netstation_autologin %}
+# The session user has an empty password: no server login, no shared home.
+AUTOLOGIN="{{ netstation_session_user }}"
+PASSWORDS_NETSTATION="{{ netstation_session_user }}/"
+# LTSP sets autologin-user-timeout=2, which hands the login to the greeter.
+POST_INIT_NETSTATION_LIGHTDM="sed -i 's/^autologin-user-timeout=.*/autologin-user-timeout=0/' /etc/lightdm/lightdm.conf"
+{% endif %}
+# Keep SSH running on clients, with fresh host keys every boot.
+KEEP_SYSTEM_SERVICES="ssh"
+POST_INIT_NETSTATION_SSH_KEYS="ssh-keygen -A"
+{% for key, value in netstation_ltsp_clients_settings.items() %}
+{{ key }}="{{ value }}"
+{% endfor %}
+{% for client in netstation_clients %}
+
+[{{ client.mac | lower }}]
+{% if client.hostname is defined %}
+HOSTNAME="{{ client.hostname }}"
+{% endif %}
+{% if client.test | default(false) %}
+# Test client: boots staging by default, with a menu to pick production.
+DEFAULT_IMAGE="{{ netstation_staging_image_name }}"
+MENU_TIMEOUT="{{ netstation_test_menu_timeout }}"
+{% endif %}
+{% for key, value in (client.settings | default({})).items() %}
+{{ key }}="{{ value }}"
+{% endfor %}
+{% endfor %}
+{% for section, settings in netstation_ltsp_sections.items() %}
+
+[{{ section }}]
+{% for key, value in settings.items() %}
+{{ key }}="{{ value }}"
+{% endfor %}
+{% endfor %}

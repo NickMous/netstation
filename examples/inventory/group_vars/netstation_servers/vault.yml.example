@@ -1,0 +1,5 @@
+---
+# Copy to vault.yml, fill in, then encrypt: ansible-vault encrypt vault.yml
+vault_wireguard_private_key: "output of: wg genkey"
+# The account's sudo password, if it needs one.
+ansible_become_password: ""

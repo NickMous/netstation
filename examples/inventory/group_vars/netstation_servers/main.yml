@@ -1,0 +1,43 @@
+---
+# Every setting and its default is documented in the collection's
+# roles/*/defaults/main.yml. This file only lists what's usually changed.
+
+# --- Network ---------------------------------------------------------------
+
+# "proxy" when a router or Windows server already hands out IP addresses,
+# "full" when this server should be the DHCP server.
+netstation_dhcp_mode: proxy
+
+# --- Clients ---------------------------------------------------------------
+
+netstation_homepage: https://portal.example.com
+netstation_wallpaper: "{{ inventory_dir }}/../files/wallpaper.jpg"
+netstation_timezone: Europe/Amsterdam
+netstation_keyboard_layout: us
+
+netstation_rdp_options:
+  - /cert:tofu
+
+# Known clients. Mark one as test client: it boots staging by default and
+# shows a menu to pick production instead.
+netstation_clients:
+  - mac: "aa:bb:cc:dd:ee:01"
+    hostname: test01
+    test: true
+
+# Files copied as-is into the image, e.g. files/rootfs/etc/skel/... .
+# netstation_image_files_dir: "{{ inventory_dir }}/../files/rootfs"
+
+# --- Remote management -----------------------------------------------------
+
+netstation_veyon_enabled: true
+netstation_veyon_public_keys:
+  - name: admin
+    key: "{{ lookup('file', inventory_dir ~ '/../files/veyon/admin-public.pem') }}"
+
+netstation_wireguard_enabled: true
+netstation_wireguard_private_key: "{{ vault_wireguard_private_key }}"
+netstation_wireguard_peers:
+  - name: admin-laptop
+    public_key: "REPLACE_WITH_PUBLIC_KEY"
+    address: 10.99.0.2/32

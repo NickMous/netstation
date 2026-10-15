@@ -10,6 +10,10 @@ netstation_wallpaper: ""
 
 netstation_numlock: true
 
+# Keep Wake-on-LAN armed on the clients' network cards. The BIOS/UEFI of each
+# client must allow it too. Wake clients with the wake playbook.
+netstation_wake_on_lan: true
+
 # Show the client's name and IP address in the panel, next to the clock.
 netstation_panel_show_address: true
 

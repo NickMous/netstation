@@ -1,0 +1,14 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Arms Wake-on-LAN (magic packet) on every wired network card that supports
+# it. Runs at boot and at shutdown, because some drivers disarm it on the way
+# down. The BIOS/UEFI must allow Wake-on-LAN as well.
+for dev in /sys/class/net/*; do
+    name=${dev##*/}
+    [ -e "$dev/device" ] || continue          # skip virtual interfaces
+    [ -e "$dev/wireless" ] && continue
+    if ethtool "$name" 2>/dev/null | grep -q 'Supports Wake-on: .*g'; then
+        ethtool -s "$name" wol g && echo "Wake-on-LAN armed on $name"
+    fi
+done
+exit 0

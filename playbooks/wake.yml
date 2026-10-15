@@ -1,0 +1,30 @@
+---
+# Wake clients with Wake-on-LAN, sent from the server.
+#   All known clients (netstation_clients):  ansible-playbook nickmous.netstation.wake
+#   Some of them, by hostname or MAC:         ... -e '{"netstation_wake": ["pc01", "aa:bb:cc:dd:ee:ff"]}'
+# Clients must have Wake-on-LAN allowed in their BIOS/UEFI.
+- name: Wake clients
+  hosts: netstation_servers
+  become: false
+  tasks:
+    - name: Pick the MAC addresses to wake
+      vars:
+        netstation_wake_targets: "{{ netstation_wake | default('all') }}"
+        netstation_known: "{{ netstation_clients | default([]) }}"
+      ansible.builtin.set_fact:
+        netstation_wake_macs: >-
+          {{ (netstation_known | map(attribute='mac') | list)
+             if netstation_wake_targets == 'all'
+             else (netstation_known | selectattr('hostname', 'defined')
+                   | selectattr('hostname', 'in', netstation_wake_targets) | map(attribute='mac') | list)
+                  + (netstation_wake_targets | select('match', '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$') | list) }}
+
+    - name: Check that there is something to wake
+      ansible.builtin.assert:
+        that: netstation_wake_macs | length > 0
+        fail_msg: No clients matched. List clients (with their MAC) in netstation_clients, or pass MAC addresses.
+
+    - name: Send the Wake-on-LAN packets
+      ansible.builtin.command:
+        argv: "{{ ['wakeonlan', '-i', netstation_wake_broadcast | default('255.255.255.255')] + netstation_wake_macs }}"
+      changed_when: true

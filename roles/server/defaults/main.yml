@@ -54,6 +54,10 @@ netstation_autologin: true
 #     settings: {}              # optional: extra ltsp.conf lines for this client
 netstation_clients: []
 
+# Where the wake playbook sends Wake-on-LAN packets: the broadcast address of
+# the clients' network.
+netstation_wake_broadcast: 255.255.255.255
+
 # How long test clients show the production/staging menu, in milliseconds.
 netstation_test_menu_timeout: 5000
 

@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Arm Wake-on-LAN on wired network cards
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/netstation-wol
+ExecStop=/usr/local/sbin/netstation-wol
+
+[Install]
+WantedBy=multi-user.target

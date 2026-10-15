@@ -59,6 +59,20 @@ booted right now, and whether dnsmasq, NFS and nginx are running.
 Cockpit is at `https://<server>:9090` (log in with your server account): logs,
 services, updates and a terminal.
 
+## Waking clients
+
+Clients listed in `netstation_clients` can be switched on from the server:
+
+```bash
+ansible-playbook nickmous.netstation.wake                                  # all of them
+ansible-playbook nickmous.netstation.wake -e '{"netstation_wake": ["pc01"]}' # by hostname or MAC
+```
+
+Each client's BIOS/UEFI must allow Wake-on-LAN (often under power
+management). The image keeps the network card armed when the client shuts
+down. If clients don't wake, set `netstation_wake_broadcast` to the
+broadcast address of their network (e.g. `192.168.1.255`).
+
 ## Adding a client
 
 PXE boot must be enabled in the BIOS/UEFI and Secure Boot disabled. A new

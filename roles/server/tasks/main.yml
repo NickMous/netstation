@@ -21,6 +21,7 @@
       - openssh-server
       - squashfs-tools
       - nginx
+      - wakeonlan
     state: present
     install_recommends: false
     update_cache: true

@@ -37,6 +37,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 | `nickmous.netstation.image_promote` | Make the staging image the production image |
 | `nickmous.netstation.image_rollback` | Restore a previous production image |
 | `nickmous.netstation.status` | Images, booted clients, services |
+| `nickmous.netstation.wake` | Wake clients with Wake-on-LAN |
 
 On the server, the same actions are available as `sudo netstation-image
 build|promote|rollback|status`.

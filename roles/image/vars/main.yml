@@ -9,6 +9,7 @@ netstation_image_packages: >-
       + (netstation_image_packages_veyon if netstation_veyon_enabled else [])
       + (['firefox-esr-l10n-' ~ netstation_firefox_language] if netstation_firefox_language | length > 0 else [])
       + (['xfce4-genmon-plugin'] if netstation_panel_show_address else [])
+      + (['ethtool'] if netstation_wake_on_lan else [])
       + netstation_image_extra_packages) | unique }}
 
 # Files rendered into the image; dest is relative to the image root.
@@ -35,3 +36,8 @@ netstation_rootfs_templates:
     mode: "0755"
   - dest: usr/local/sbin/netstation-image-setup
     mode: "0755"
+  - dest: usr/local/sbin/netstation-wol
+    mode: "0755"
+    when: "{{ netstation_wake_on_lan }}"
+  - dest: etc/systemd/system/netstation-wol.service
+    when: "{{ netstation_wake_on_lan }}"

@@ -10,6 +10,9 @@ netstation_wallpaper: ""
 
 netstation_numlock: true
 
+# Show the client's name and IP address in the panel, next to the clock.
+netstation_panel_show_address: true
+
 # Extra options for xfreerdp3, after the .rdp file and the password.
 netstation_rdp_options:
   - /cert:tofu

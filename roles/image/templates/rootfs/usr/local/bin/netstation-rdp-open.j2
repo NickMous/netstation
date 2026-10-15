@@ -1,0 +1,20 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# Opens an .rdp file in xfreerdp3 and asks for the password in a dialog.
+set -u
+
+file=$1
+
+# .rdp files saved on Windows are usually UTF-16.
+if head -c 2 "$file" | od -An -tx1 | grep -qE 'ff fe|fe ff'; then
+    content=$(iconv -f UTF-16 -t UTF-8 "$file")
+else
+    content=$(cat "$file")
+fi
+user=$(printf '%s\n' "$content" | tr -d '\r' | grep -i -m 1 '^username:s:' | cut -d: -f3-)
+
+pass=$(zenity --password --title="Remote Desktop${user:+ - $user}") || exit 0
+
+xfreerdp3 "$file" /p:"$pass" {{ netstation_rdp_options | map('quote') | join(' ') }} ||
+    zenity --error --title="Remote Desktop" \
+        --text="The connection failed. Check your password and try again."

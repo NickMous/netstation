@@ -1,0 +1,4 @@
+{% set components = netstation_image_components | join(' ') %}
+deb {{ netstation_debian_mirror }} {{ netstation_debian_suite }} {{ components }}
+deb {{ netstation_debian_mirror }} {{ netstation_debian_suite }}-updates {{ components }}
+deb {{ netstation_debian_security_mirror }} {{ netstation_debian_suite }}-security {{ components }}

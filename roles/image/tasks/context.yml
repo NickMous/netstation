@@ -1,0 +1,117 @@
+---
+# Everything the image build needs is rendered into a fresh folder, then
+# swapped in. The scheduled staging build reuses the last rendered context.
+
+- name: Set the build context paths
+  ansible.builtin.set_fact:
+    netstation_context_dir: "{{ netstation_state_dir }}/context"
+    netstation_context_new: "{{ netstation_state_dir }}/context.new"
+
+- name: Start from an empty context folder
+  ansible.builtin.file:
+    path: "{{ netstation_context_new }}"
+    state: absent
+
+- name: Create the context folder
+  ansible.builtin.file:
+    path: "{{ netstation_context_new }}/rootfs"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write the package list, APT sources and build settings
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ netstation_context_new }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - packages
+    - sources.list
+    - build.env
+
+- name: Create the folders for the image files
+  ansible.builtin.file:
+    path: "{{ netstation_context_new }}/rootfs/{{ item.dest | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ netstation_rootfs_templates }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when: item.when | default(true) | bool
+
+- name: Render the image files
+  ansible.builtin.template:
+    src: "rootfs/{{ item.dest }}.j2"
+    dest: "{{ netstation_context_new }}/rootfs/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ netstation_rootfs_templates }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when: item.when | default(true) | bool
+
+- name: Add the Veyon public keys
+  when: netstation_veyon_enabled
+  block:
+    - name: Create the Veyon key folder
+      ansible.builtin.file:
+        path: "{{ netstation_context_new }}/rootfs/etc/netstation/veyon"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Write the Veyon public keys
+      ansible.builtin.copy:
+        content: "{{ item.key | trim }}\n"
+        dest: "{{ netstation_context_new }}/rootfs/etc/netstation/veyon/{{ item.name }}.pem"
+        owner: root
+        group: root
+        mode: "0644"
+      loop: "{{ netstation_veyon_public_keys }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+- name: Add the wallpaper
+  when: netstation_wallpaper | length > 0
+  block:
+    - name: Create the wallpaper folder
+      ansible.builtin.file:
+        path: "{{ netstation_context_new }}/rootfs/usr/share/backgrounds/netstation"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Copy the wallpaper
+      ansible.builtin.copy:
+        src: "{{ netstation_wallpaper }}"
+        dest: "{{ netstation_context_new }}/rootfs/usr/share/backgrounds/netstation/{{ netstation_wallpaper_file }}"
+        owner: root
+        group: root
+        mode: "0644"
+
+- name: Copy the site-specific image files
+  ansible.builtin.copy:
+    src: "{{ netstation_image_files_dir | regex_replace('/*$', '') }}/"
+    dest: "{{ netstation_context_new }}/rootfs/"
+    owner: root
+    group: root
+    mode: preserve
+    directory_mode: "0755"
+  when: netstation_image_files_dir | length > 0
+
+- name: Remove the previous context
+  ansible.builtin.file:
+    path: "{{ netstation_context_dir }}"
+    state: absent
+
+- name: Activate the new context
+  ansible.builtin.command: mv {{ netstation_context_new | quote }} {{ netstation_context_dir | quote }}
+  changed_when: true

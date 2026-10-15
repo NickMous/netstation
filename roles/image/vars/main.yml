@@ -1,0 +1,28 @@
+---
+netstation_wallpaper_file: "wallpaper{{ netstation_wallpaper | splitext | last }}"
+
+netstation_image_packages: >-
+  {{ (netstation_image_packages_system
+      + netstation_image_packages_firmware
+      + netstation_image_packages_desktop
+      + netstation_image_packages_apps
+      + (netstation_image_packages_veyon if netstation_veyon_enabled else [])
+      + netstation_image_extra_packages) | unique }}
+
+# Files rendered into the image; dest is relative to the image root.
+netstation_rootfs_templates:
+  - dest: etc/default/keyboard
+  - dest: etc/lightdm/lightdm.conf.d/70-netstation.conf
+  - dest: etc/xdg/autostart/netstation-browser.desktop
+  - dest: etc/xdg/autostart/netstation-numlock.desktop
+    when: "{{ netstation_numlock }}"
+  - dest: etc/xdg/mimeapps.list
+  - dest: usr/share/mime/packages/netstation-rdp.xml
+  - dest: usr/share/applications/netstation-rdp.desktop
+  - dest: usr/lib/firefox-esr/distribution/policies.json
+  - dest: usr/local/bin/netstation-rdp-open
+    mode: "0755"
+  - dest: usr/local/sbin/netstation-reset-home
+    mode: "0755"
+  - dest: usr/local/sbin/netstation-image-setup
+    mode: "0755"

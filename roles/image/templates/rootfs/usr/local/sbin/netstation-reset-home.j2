@@ -1,0 +1,18 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# LightDM session setup/cleanup script: gives the session user a fresh home
+# folder from /etc/skel. It must never block a login, so it always exits 0.
+user={{ netstation_session_user | quote }}
+
+# Only on clients, where the user is merged in from the server.
+id "$user" >/dev/null 2>&1 || exit 0
+home=$(getent passwd "$user" | cut -d: -f6)
+[ -n "$home" ] || exit 0
+# Never wipe a home that is mounted from the server.
+findmnt -n "$home" >/dev/null 2>&1 && exit 0
+
+rm -rf "$home"
+cp -a /etc/skel "$home"
+chown -R "$user:" "$home"
+chmod 0700 "$home"
+exit 0

@@ -1,0 +1,102 @@
+---
+# --- What the clients run ---------------------------------------------------
+
+# The page the browser opens on login.
+netstation_homepage: about:blank
+
+# Image file on the Ansible controller to use as the desktop background.
+# Empty keeps the Debian default.
+netstation_wallpaper: ""
+
+netstation_numlock: true
+
+# Extra options for xfreerdp3, after the .rdp file and the password.
+netstation_rdp_options:
+  - /cert:tofu
+
+# Firefox enterprise policies merged over the defaults
+# (https://mozilla.github.io/policy-templates/).
+netstation_firefox_policies: {}
+
+# --- Packages ---------------------------------------------------------------
+
+netstation_image_components:
+  - main
+  - contrib
+  - non-free-firmware
+
+# Recommended packages are left out to keep the image small; everything the
+# clients need is listed explicitly below.
+netstation_image_install_recommends: false
+
+netstation_image_packages_system:
+  - linux-image-amd64
+  - initramfs-tools
+  - systemd-sysv
+  - udev
+  - dbus
+  - kmod
+  - iproute2
+  - ltsp
+  - nfs-common
+  - sshfs
+  - openssh-server
+  - sudo
+  - locales
+  - tzdata
+  - keyboard-configuration
+  - console-setup
+  - ca-certificates
+
+netstation_image_packages_firmware:
+  - firmware-linux-free
+  - firmware-misc-nonfree
+  - firmware-intel-graphics
+  - firmware-amd-graphics
+  - firmware-realtek
+
+netstation_image_packages_desktop:
+  - xserver-xorg-core
+  - xserver-xorg-input-libinput
+  - lightdm
+  - lightdm-gtk-greeter
+  - xfce4-session
+  - xfwm4
+  - xfdesktop4
+  - xfce4-panel
+  - xfce4-settings
+  - xfce4-terminal
+  - thunar
+  - dbus-user-session
+  - adwaita-icon-theme
+  - fonts-dejavu-core
+  - desktop-base
+  - pipewire-audio
+  - numlockx
+  - xdg-utils
+  - shared-mime-info
+  - desktop-file-utils
+
+netstation_image_packages_apps:
+  - firefox-esr
+  - freerdp3-x11
+  - zenity
+
+netstation_image_packages_veyon:
+  - veyon-service
+
+# Site-specific additions.
+netstation_image_extra_packages: []
+
+# Folder on the Ansible controller copied over the image root last, e.g.
+# files/rootfs/etc/foo.conf ends up as /etc/foo.conf on every client.
+netstation_image_files_dir: ""
+
+# --- Build ------------------------------------------------------------------
+
+netstation_squashfs_params: "-comp zstd"
+
+# Build a fresh staging image on a schedule (systemd OnCalendar syntax).
+# Promoting it to production stays a manual step.
+netstation_staging_build_enabled: true
+netstation_staging_build_schedule: "Sun *-*-* 03:00:00"

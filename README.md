@@ -38,6 +38,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 | `nickmous.netstation.image_rollback` | Restore a previous production image |
 | `nickmous.netstation.status` | Images, booted clients, services |
 | `nickmous.netstation.wake` | Wake clients with Wake-on-LAN |
+| `nickmous.netstation.veyon_computers` | Write the booted clients to a CSV file for Veyon Master |
 
 On the server, the same actions are available as `sudo netstation-image
 build|promote|rollback|status`.

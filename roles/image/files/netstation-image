@@ -31,6 +31,7 @@ Commands:
   promote            Make the staging image the production image
   rollback [BUILD]   Restore a previous production image (default: the newest)
   status             Show images, booted clients and services
+  clients            List booted clients as "IP MAC", one per line
 EOF
 }
 
@@ -157,6 +158,16 @@ cmd_rollback() {
     log "Production is now build $rollback_id. Clients pick it up on their next boot."
 }
 
+# Clients booted from this server: they keep the image open over NFS.
+cmd_clients() {
+    ss -Htn state established '( sport = :2049 )' | awk '{print $4}' |
+        sed 's/^\[::ffff://; s/\]\{0,1\}:[0-9]*$//' | sort -uV |
+        while read -r ip; do
+            mac=$(ip neigh show "$ip" | awk '{ for (i = 1; i < NF; i++) if ($i == "lladdr") print $(i + 1) }')
+            echo "$ip ${mac:-unknown}"
+        done
+}
+
 describe() {
     if [ -f "$1" ]; then
         echo "build $(build_id "$1"), $(du -h "$1" | cut -f1)"
@@ -192,8 +203,7 @@ cmd_status() {
     printf '  last run: %s\n' "$last_run"
     echo
     echo "Clients booted from this server"
-    clients=$(ss -Htn state established '( sport = :2049 )' | awk '{print $4}' |
-        sed 's/^\[::ffff://; s/\]\{0,1\}:[0-9]*$//' | sort -uV)
+    clients=$(cmd_clients)
     if [ -n "$clients" ]; then
         echo "$clients" | sed 's/^/  /'
     else
@@ -223,6 +233,7 @@ rollback)
     cmd_rollback "$@"
     ;;
 status) cmd_status ;;
+clients) cmd_clients ;;
 -h | --help | help) usage ;;
 *)
     usage >&2

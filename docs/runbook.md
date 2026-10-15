@@ -73,6 +73,19 @@ management). The image keeps the network card armed when the client shuts
 down. If clients don't wake, set `netstation_wake_broadcast` to the
 broadcast address of their network (e.g. `192.168.1.255`).
 
+## Veyon computer list
+
+Veyon Master needs a list of the clients. Generate it from the clients that
+are booted right now, then import it with the two commands the playbook
+prints:
+
+```bash
+ansible-playbook nickmous.netstation.veyon_computers
+```
+
+Client IP addresses can change, so run it again when Veyon shows clients as
+offline that are switched on. DHCP reservations for the clients avoid that.
+
 ## Adding a client
 
 PXE boot must be enabled in the BIOS/UEFI and Secure Boot disabled. A new

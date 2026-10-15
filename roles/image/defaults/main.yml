@@ -14,6 +14,10 @@ netstation_numlock: true
 netstation_rdp_options:
   - /cert:tofu
 
+# Firefox's own language, e.g. "nl" or "de" (installs firefox-esr-l10n-<language>).
+# Empty keeps English. The rest of the desktop follows netstation_locale.
+netstation_firefox_language: ""
+
 # Firefox enterprise policies merged over the defaults
 # (https://mozilla.github.io/policy-templates/).
 netstation_firefox_policies: {}

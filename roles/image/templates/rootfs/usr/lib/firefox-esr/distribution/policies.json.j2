@@ -21,4 +21,7 @@
     'extensions': {'rdp': {'action': 'useSystemDefault', 'ask': false}}
   }
 } %}
+{% if netstation_firefox_language | length > 0 %}
+{% set defaults = defaults | combine({'RequestedLocales': [netstation_firefox_language]}) %}
+{% endif %}
 {{ {'policies': defaults | combine(netstation_firefox_policies, recursive=True)} | to_nice_json(indent=2) }}

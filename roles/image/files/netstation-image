@@ -171,8 +171,12 @@ cmd_status() {
     printf '  timer: %s, next: %s\n' \
         "$(systemctl is-enabled netstation-staging-build.timer 2>/dev/null || true)" \
         "$(systemctl show -P NextElapseUSecRealtime netstation-staging-build.timer 2>/dev/null || true)"
-    printf '  last run: %s\n' \
-        "$(systemctl show -P Result netstation-staging-build.service 2>/dev/null || true)"
+    if [ -n "$(systemctl show -P ExecMainStartTimestamp netstation-staging-build.service 2>/dev/null)" ]; then
+        last_run=$(systemctl show -P Result netstation-staging-build.service)
+    else
+        last_run=never
+    fi
+    printf '  last run: %s\n' "$last_run"
     echo
     echo "Clients booted from this server"
     clients=$(ss -Htn state established '( sport = :2049 )' | awk '{print $4}' |

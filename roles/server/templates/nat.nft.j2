@@ -1,0 +1,12 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+# Masquerades client traffic that leaves through {{ netstation_nat_interface }}.
+table ip netstation_nat
+delete table ip netstation_nat
+
+table ip netstation_nat {
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        oifname "{{ netstation_nat_interface }}" masquerade
+    }
+}

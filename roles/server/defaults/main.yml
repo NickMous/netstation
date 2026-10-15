@@ -17,7 +17,14 @@ netstation_proxy_subnets:
 netstation_dhcp_range_start: ""
 netstation_dhcp_range_end: ""
 netstation_dhcp_lease_time: 12h
+# Required in full mode; dnsmasq's own DNS service is off.
 netstation_dhcp_dns_servers: []
+
+# Share this server's internet connection with the clients (full mode with
+# two network cards: one to the clients, one to the internet).
+netstation_nat_enabled: false
+# The network card that leads to the internet.
+netstation_nat_interface: "{{ ansible_facts['default_ipv4']['interface'] }}"
 
 # Pin dnsmasq to an exact package version and hold it, e.g. "2.90-4~deb12u1".
 # Empty means the current Debian version, without a hold.

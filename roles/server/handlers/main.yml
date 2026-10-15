@@ -10,6 +10,17 @@
     state: reloaded
   when: netstation_http_boot
 
+- name: Apply sysctl settings
+  ansible.builtin.command: sysctl --system
+  changed_when: true
+
+- name: Restart NAT
+  ansible.builtin.systemd_service:
+    name: netstation-nat
+    state: restarted
+    daemon_reload: true
+  when: netstation_nat_enabled
+
 - name: Restart the NFS server
   ansible.builtin.systemd_service:
     name: nfs-server

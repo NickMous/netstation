@@ -69,8 +69,8 @@ Every variable is documented, with its default, in `roles/*/defaults/main.yml`:
 
 - `roles/common/defaults/main.yml`: image names, session user, Debian release,
   locale, Veyon
-- `roles/server/defaults/main.yml`: DHCP mode, known clients and test clients,
-  extra `ltsp.conf` settings
+- `roles/server/defaults/main.yml`: DHCP mode, NAT for two-network-card
+  setups, known clients and test clients, extra `ltsp.conf` settings
 - `roles/image/defaults/main.yml`: homepage, wallpaper, RDP options, Firefox
   policies, packages, extra files, scheduled builds
 - `roles/wireguard/defaults/main.yml` and `roles/cockpit/defaults/main.yml`

@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+[Unit]
+Description=NAT for netstation clients
+# nftables.service flushes the whole ruleset, so load after it.
+After=nftables.service network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/netstation/nat.nft
+ExecStop=/usr/sbin/nft delete table ip netstation_nat
+
+[Install]
+WantedBy=multi-user.target

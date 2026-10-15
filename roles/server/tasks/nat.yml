@@ -1,0 +1,50 @@
+---
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    install_recommends: false
+  when: netstation_nat_enabled
+
+- name: Configure IP forwarding
+  ansible.builtin.copy:
+    content: "net.ipv4.ip_forward = 1\n"
+    dest: /etc/sysctl.d/90-netstation-nat.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: netstation_nat_enabled
+  notify: Apply sysctl settings
+
+- name: Remove IP forwarding when NAT is off
+  ansible.builtin.file:
+    path: /etc/sysctl.d/90-netstation-nat.conf
+    state: absent
+  when: not netstation_nat_enabled
+
+- name: Write the NAT rules
+  ansible.builtin.template:
+    src: nat.nft.j2
+    dest: /etc/netstation/nat.nft
+    owner: root
+    group: root
+    mode: "0644"
+  when: netstation_nat_enabled
+  notify: Restart NAT
+
+- name: Install the NAT service
+  ansible.builtin.template:
+    src: netstation-nat.service.j2
+    dest: /etc/systemd/system/netstation-nat.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: netstation_nat_unit
+  notify: Restart NAT
+
+- name: Enable or disable the NAT service
+  ansible.builtin.systemd_service:
+    name: netstation-nat
+    daemon_reload: "{{ netstation_nat_unit is changed }}"
+    enabled: "{{ netstation_nat_enabled }}"
+    state: "{{ 'started' if netstation_nat_enabled else 'stopped' }}"

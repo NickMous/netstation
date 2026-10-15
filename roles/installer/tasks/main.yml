@@ -3,13 +3,15 @@
   ansible.builtin.assert:
     that:
       - netstation_installer_admin_password | length > 0
+      - netstation_installer_admin_user not in ['admin', 'root', 'administrator']
       - netstation_installer_network in ['dhcp', 'static']
       - >-
         netstation_installer_network != 'static' or
         (netstation_installer_address | length > 0 and netstation_installer_gateway | length > 0
          and netstation_installer_nameservers | length > 0)
     fail_msg: >-
-      Set netstation_installer_admin_password (in your vault). A static network
+      Set netstation_installer_admin_password (in your vault), and don't use a
+      reserved user name such as admin (Debian's installer refuses it). A static network
       also needs netstation_installer_address, _gateway and _nameservers.
 
 - name: Check for xorriso and cpio

@@ -11,7 +11,8 @@ netstation_installer_hostname: "{{ inventory_hostname }}"
 netstation_installer_domain: ""
 
 # The admin account. The password is required; keep it in your vault.
-netstation_installer_admin_user: "{{ ansible_user | default('admin') }}"
+# Debian's installer refuses some names, such as "admin".
+netstation_installer_admin_user: "{{ ansible_user | default('netadmin') }}"
 netstation_installer_admin_password: ""
 # Public key files allowed to log in as the admin (default: your own keys).
 netstation_installer_ssh_key_files: >-

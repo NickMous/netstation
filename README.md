@@ -31,6 +31,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 
 | Playbook | What it does |
 |---|---|
+| `nickmous.netstation.installer_iso` | Build an unattended Debian installer ISO for the server |
 | `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, WireGuard, Cockpit) |
 | `nickmous.netstation.image_build` | Build a new staging image from scratch |
 | `nickmous.netstation.image_promote` | Make the staging image the production image |
@@ -42,26 +43,58 @@ build|promote|rollback|status`.
 
 ## Getting started
 
-Your configuration lives in a separate, private repository. `examples/` is a
-complete starting point for one:
+You need a machine to run Ansible from (Debian/Ubuntu below), a server or VM
+for netstation, and clients that can network-boot. Everything else is set up
+by the playbooks.
+
+**0. Your machine.** Install the tools and start a private configuration
+repository from `examples/`:
 
 ```bash
+sudo apt install ansible git xorriso
 cp -r examples ~/my-netstation && cd ~/my-netstation
 git init
 ansible-galaxy collection install -r requirements.yml
-# edit inventory/hosts.yml and inventory/group_vars/netstation_servers/main.yml
-cp inventory/group_vars/netstation_servers/vault.yml.example inventory/group_vars/netstation_servers/vault.yml
-ansible-vault encrypt inventory/group_vars/netstation_servers/vault.yml
-
-ansible-playbook nickmous.netstation.server --check --diff   # preview
-ansible-playbook nickmous.netstation.server
-ansible-playbook nickmous.netstation.image_build
-ansible-playbook nickmous.netstation.image_promote
 ```
 
-Requirements: a Debian 13 (trixie) server with SSH access and sudo, on the
-same network segment as the clients. Clients need PXE boot enabled and Secure
-Boot disabled.
+**1. Settings.** Edit `inventory/hosts.yml` (the server's name, address and
+admin user) and `inventory/group_vars/netstation_servers/main.yml`. Then
+create the vault with the admin password:
+
+```bash
+cp inventory/group_vars/netstation_servers/vault.yml.example inventory/group_vars/netstation_servers/vault.yml
+nano inventory/group_vars/netstation_servers/vault.yml
+ansible-vault encrypt inventory/group_vars/netstation_servers/vault.yml
+```
+
+**2. Installer.** Build an ISO that installs Debian without any questions,
+with the admin account, your SSH key and the network settings from step 1:
+
+```bash
+ansible-playbook nickmous.netstation.installer_iso --ask-vault-pass
+```
+
+The ISO ends up in `build/<server name>.iso`.
+
+**3. Install the server.** Boot the server or VM from the ISO. It erases the
+first disk, installs Debian and reboots, which takes about ten minutes.
+Remove the ISO afterwards. For a Hyper-V VM: Generation 2, with Secure Boot
+on the "Microsoft UEFI Certificate Authority" template (or off).
+
+**4. Set up netstation and build the first image:**
+
+```bash
+ansible-playbook nickmous.netstation.server --ask-vault-pass
+ansible-playbook nickmous.netstation.image_build --ask-vault-pass
+ansible-playbook nickmous.netstation.image_promote --ask-vault-pass
+```
+
+**5. Boot a client** from the network. PXE boot must be enabled in its
+BIOS/UEFI and Secure Boot disabled.
+
+Requirements: the server must be on the same network segment as the clients.
+With `netstation_dhcp_mode: proxy` (the default), another DHCP server on that
+network hands out the IP addresses.
 
 ## Configuration
 
@@ -73,6 +106,8 @@ Every variable is documented, with its default, in `roles/*/defaults/main.yml`:
   setups, known clients and test clients, extra `ltsp.conf` settings
 - `roles/image/defaults/main.yml`: homepage, wallpaper, RDP options, Firefox
   policies, packages, extra files, scheduled builds
+- `roles/installer/defaults/main.yml`: admin account, network settings and
+  extra network cards for the installed server
 - `roles/wireguard/defaults/main.yml` and `roles/cockpit/defaults/main.yml`
 
 All variables share the `netstation_` prefix, so you can set them in one

@@ -2,6 +2,17 @@
 # Every setting and its default is documented in the collection's
 # roles/*/defaults/main.yml. This file only lists what's usually changed.
 
+# --- Server installation ---------------------------------------------------
+
+netstation_installer_admin_password: "{{ vault_admin_password }}"
+ansible_become_password: "{{ vault_admin_password }}"
+# A fixed address is easiest; or use DHCP with a reservation for the server.
+netstation_installer_network: static
+netstation_installer_address: 192.168.1.10
+netstation_installer_gateway: 192.168.1.1
+netstation_installer_nameservers:
+  - 192.168.1.1
+
 # --- Network ---------------------------------------------------------------
 
 # "proxy" when a router or Windows server already hands out IP addresses,
@@ -35,9 +46,10 @@ netstation_veyon_public_keys:
   - name: admin
     key: "{{ lookup('file', inventory_dir ~ '/../files/veyon/admin-public.pem') }}"
 
-netstation_wireguard_enabled: true
-netstation_wireguard_private_key: "{{ vault_wireguard_private_key }}"
-netstation_wireguard_peers:
-  - name: admin-laptop
-    public_key: "REPLACE_WITH_PUBLIC_KEY"
-    address: 10.99.0.2/32
+# Remote access from outside the network, if you need it:
+# netstation_wireguard_enabled: true
+# netstation_wireguard_private_key: "{{ vault_wireguard_private_key }}"
+# netstation_wireguard_peers:
+#   - name: admin-laptop
+#     public_key: "REPLACE_WITH_PUBLIC_KEY"
+#     address: 10.99.0.2/32

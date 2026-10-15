@@ -2,7 +2,7 @@
 
 Day-to-day operation of a netstation server. Run the `ansible-playbook`
 commands from your configuration repository. Add `--ask-vault-pass` if you
-haven't set up a vault password file, and `-K` if sudo asks for a password.
+haven't set up a vault password file.
 
 ## Updating the clients
 

@@ -1,0 +1,95 @@
+---
+- name: Check the installer settings
+  ansible.builtin.assert:
+    that:
+      - netstation_installer_admin_password | length > 0
+      - netstation_installer_network in ['dhcp', 'static']
+      - >-
+        netstation_installer_network != 'static' or
+        (netstation_installer_address | length > 0 and netstation_installer_gateway | length > 0
+         and netstation_installer_nameservers | length > 0)
+    fail_msg: >-
+      Set netstation_installer_admin_password (in your vault). A static network
+      also needs netstation_installer_address, _gateway and _nameservers.
+
+- name: Check for xorriso and cpio
+  ansible.builtin.command: sh -c 'command -v xorriso && command -v cpio'
+  changed_when: false
+
+- name: Create the build folder
+  ansible.builtin.file:
+    path: "{{ netstation_installer_build_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Look up the current Debian netinst ISO
+  ansible.builtin.uri:
+    url: "{{ netstation_installer_iso_mirror }}/SHA512SUMS"
+    return_content: true
+  register: netstation_installer_sums
+
+- name: Pick the netinst ISO from the checksum list
+  ansible.builtin.set_fact:
+    netstation_installer_iso: >-
+      {{ netstation_installer_sums.content
+         | regex_search('^([0-9a-f]+) +(debian-[0-9.]+-amd64-netinst[.]iso)$', '\1', '\2', multiline=True) }}
+
+- name: Download the netinst ISO
+  ansible.builtin.get_url:
+    url: "{{ netstation_installer_iso_mirror }}/{{ netstation_installer_iso[1] }}"
+    dest: "{{ netstation_installer_build_dir }}/{{ netstation_installer_iso[1] }}"
+    checksum: "sha512:{{ netstation_installer_iso[0] }}"
+    mode: "0644"
+
+- name: Create a work folder
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: netstation-installer.
+  register: netstation_installer_work
+
+- name: Build the ISO
+  block:
+    - name: Create the folders for the installer files
+      ansible.builtin.file:
+        path: "{{ netstation_installer_work.path }}/overlay/netstation/interfaces.d"
+        state: directory
+        mode: "0755"
+
+    - name: Write the answers for the installer
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ netstation_installer_work.path }}/overlay/{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: preseed.cfg.j2, dest: preseed.cfg, mode: "0644" }
+        - { src: late-command.sh.j2, dest: netstation/late-command.sh, mode: "0755" }
+        - { src: authorized_keys.j2, dest: netstation/authorized_keys, mode: "0644" }
+      loop_control:
+        label: "{{ item.dest }}"
+
+    - name: Write the extra network cards
+      ansible.builtin.template:
+        src: interface.j2
+        dest: "{{ netstation_installer_work.path }}/overlay/netstation/interfaces.d/{{ item.name }}"
+        mode: "0644"
+      loop: "{{ netstation_installer_extra_interfaces }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Repack the ISO
+      ansible.builtin.script:
+        cmd: >-
+          netstation-repack-iso
+          {{ (netstation_installer_build_dir ~ '/' ~ netstation_installer_iso[1]) | quote }}
+          {{ netstation_installer_work.path | quote }}
+          {{ netstation_installer_output | quote }}
+      changed_when: true
+
+    - name: Show where the ISO is
+      ansible.builtin.debug:
+        msg: "Installer ISO: {{ netstation_installer_output | realpath }}"
+  always:
+    - name: Remove the work folder
+      ansible.builtin.file:
+        path: "{{ netstation_installer_work.path }}"
+        state: absent

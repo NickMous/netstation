@@ -1,0 +1,27 @@
+namespace: nickmous
+name: netstation
+version: 0.1.0
+readme: README.md
+authors:
+  - NickMous
+description: >-
+  Reproducible LTSP setup for stateless, network-booted RDP thin clients on
+  Debian: server, client image builds, staging/production rollout.
+license:
+  - MIT
+tags:
+  - linux
+  - infrastructure
+  - ltsp
+  - thinclient
+  - netboot
+  - pxe
+  - rdp
+  - debian
+dependencies: {}
+repository: https://github.com/NickMous/netstation
+issues: https://github.com/NickMous/netstation/issues
+build_ignore:
+  - .git
+  - .gitignore
+  - "*.tar.gz"

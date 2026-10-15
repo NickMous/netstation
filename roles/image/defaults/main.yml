@@ -79,6 +79,8 @@ netstation_image_packages_desktop:
   - xfce4-terminal
   - thunar
   - dbus-user-session
+  # Lets the user at the client shut down and restart it from the desktop.
+  - polkitd
   - adwaita-icon-theme
   - fonts-dejavu-core
   - desktop-base

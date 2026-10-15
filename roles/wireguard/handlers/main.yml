@@ -1,0 +1,12 @@
+---
+- name: Apply sysctl settings
+  ansible.builtin.command: sysctl --system
+  changed_when: true
+
+# A reload updates keys and peers without dropping the tunnel you may be
+# connected through. Changes to the address or port need a manual restart:
+#   sudo systemctl restart wg-quick@wg0
+- name: Reload WireGuard
+  ansible.builtin.systemd_service:
+    name: "wg-quick@{{ netstation_wireguard_interface }}"
+    state: reloaded

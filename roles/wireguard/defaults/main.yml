@@ -1,0 +1,20 @@
+---
+netstation_wireguard_interface: wg0
+# The server's address inside the VPN, with the VPN's prefix length.
+netstation_wireguard_address: 10.99.0.1/24
+# The VPN network, used for the NAT rule.
+netstation_wireguard_network: 10.99.0.0/24
+netstation_wireguard_port: 51820
+# Keep this in an Ansible Vault. Generate one with: wg genkey
+netstation_wireguard_private_key: ""
+
+# Let VPN clients reach the LAN through this server (NAT), so the thin
+# clients see the traffic as coming from the server.
+netstation_wireguard_masquerade: true
+netstation_wireguard_lan_interface: "{{ ansible_facts['default_ipv4']['interface'] }}"
+
+# Admin devices allowed to connect:
+#   - name: laptop-alice
+#     public_key: "..."
+#     address: 10.99.0.2/32
+netstation_wireguard_peers: []

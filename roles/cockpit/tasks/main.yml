@@ -1,0 +1,12 @@
+---
+- name: Install Cockpit
+  ansible.builtin.apt:
+    name: "{{ ['cockpit', 'cockpit-packagekit'] + netstation_cockpit_extra_packages }}"
+    state: present
+    install_recommends: false
+
+- name: Enable Cockpit
+  ansible.builtin.systemd_service:
+    name: cockpit.socket
+    enabled: true
+    state: started

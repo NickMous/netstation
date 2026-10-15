@@ -1,0 +1,14 @@
+---
+# Make the staging image the production image. Clients use it on their next boot.
+- name: Promote staging to production
+  hosts: netstation_servers
+  become: true
+  tasks:
+    - name: Promote the staging image
+      ansible.builtin.command: /usr/local/sbin/netstation-image promote
+      register: netstation_promote
+      changed_when: true
+
+    - name: Show the result
+      ansible.builtin.debug:
+        msg: "{{ netstation_promote.stdout_lines | select('match', '^==> ') | list }}"

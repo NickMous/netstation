@@ -1,0 +1,14 @@
+---
+# Images, booted clients and services. Changes nothing.
+- name: Show the netstation status
+  hosts: netstation_servers
+  become: true
+  tasks:
+    - name: Collect the status
+      ansible.builtin.command: /usr/local/sbin/netstation-image status
+      register: netstation_status
+      changed_when: false
+
+    - name: Show the status
+      ansible.builtin.debug:
+        msg: "{{ netstation_status.stdout_lines }}"

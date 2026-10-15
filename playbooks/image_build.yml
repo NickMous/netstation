@@ -1,0 +1,21 @@
+---
+# Build a fresh staging image from the current inventory settings.
+# Test it on a test client, then run image_promote.
+- name: Build a staging image
+  hosts: netstation_servers
+  become: true
+  tasks:
+    - name: Prepare the build
+      ansible.builtin.include_role:
+        name: nickmous.netstation.image
+
+    - name: Build the image (this takes a while)
+      ansible.builtin.command: /usr/local/sbin/netstation-image build
+      async: 7200
+      poll: 15
+      register: netstation_build
+      changed_when: true
+
+    - name: Show the result
+      ansible.builtin.debug:
+        msg: "{{ netstation_build.stdout_lines | select('match', '^==> ') | list }}"

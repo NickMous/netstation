@@ -1,18 +1,32 @@
 ---
-- name: Check the installer settings
+- name: Check the admin password
+  ansible.builtin.assert:
+    that: netstation_installer_admin_password | length > 0
+    fail_msg: Set netstation_installer_admin_password (keep it in your vault).
+    quiet: true
+
+- name: Check the admin user name
+  ansible.builtin.assert:
+    that: netstation_installer_admin_user not in ['admin', 'root', 'administrator']
+    fail_msg: >-
+      "{{ netstation_installer_admin_user }}" is reserved and Debian's installer refuses it;
+      use another ansible_user, e.g. netadmin.
+    quiet: true
+
+- name: Check the network settings
   ansible.builtin.assert:
     that:
-      - netstation_installer_admin_password | length > 0
-      - netstation_installer_admin_user not in ['admin', 'root', 'administrator']
       - netstation_installer_network in ['dhcp', 'static']
       - >-
         netstation_installer_network != 'static' or
         (netstation_installer_address | length > 0 and netstation_installer_gateway | length > 0
          and netstation_installer_nameservers | length > 0)
     fail_msg: >-
-      Set netstation_installer_admin_password (in your vault), and don't use a
-      reserved user name such as admin (Debian's installer refuses it). A static network
-      also needs netstation_installer_address, _gateway and _nameservers.
+      netstation_installer_network is "static", so fill in netstation_installer_address,
+      netstation_installer_gateway and netstation_installer_nameservers
+      (now: address "{{ netstation_installer_address }}", gateway "{{ netstation_installer_gateway }}",
+      nameservers {{ netstation_installer_nameservers }}). Or use netstation_installer_network: dhcp.
+    quiet: true
 
 - name: Check for xorriso and cpio
   ansible.builtin.command: sh -c 'command -v xorriso && command -v cpio'

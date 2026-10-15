@@ -26,9 +26,15 @@ netstation_nat_enabled: false
 # The network card that leads to the internet.
 netstation_nat_interface: "{{ ansible_facts['default_ipv4']['interface'] }}"
 
-# Pin dnsmasq to an exact package version and hold it, e.g. "2.90-4~deb12u1".
-# Empty means the current Debian version, without a hold.
+# Pin dnsmasq to an exact package version and hold it. Empty means the
+# current Debian version, without a hold. dnsmasq 2.91 (Debian 13) hangs in
+# proxy mode after the first network boot; 2.90 from Debian 12 works:
+#   netstation_dnsmasq_version: "2.90-4~deb12u2"
+#   netstation_dnsmasq_suite: bookworm
 netstation_dnsmasq_version: ""
+# The Debian release to fetch the pinned version from, if it isn't the
+# server's own (added as a package source used only for that version).
+netstation_dnsmasq_suite: ""
 netstation_dnsmasq_log_dhcp: false
 # Extra lines appended to the dnsmasq configuration.
 netstation_dnsmasq_extra: []

@@ -2,9 +2,6 @@
 # Boot the server into a text console instead of a desktop.
 netstation_server_headless: true
 
-# The address clients use to reach this server.
-netstation_server_ip: "{{ ansible_facts['default_ipv4']['address'] }}"
-
 # How clients get an IP address:
 #   proxy: another DHCP server (router, Windows) hands out IPs; dnsmasq only
 #          adds the network-boot information.

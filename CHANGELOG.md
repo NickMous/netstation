@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.1 (2026-10-19)
 
 - `image_diff` copies both versions to `build/image-diff/` in your
   configuration repository, to open in a diff viewer.

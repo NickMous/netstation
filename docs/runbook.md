@@ -22,6 +22,15 @@ haven't set up a vault password file.
    It lists updated, added and removed packages, and the changes to the files
    netstation puts in the image (settings, Firefox policies, scripts).
 
+   On the server, `sudo netstation-image diff` shows the same, colored and
+   paged like `git diff`. To use a diff viewer, write both versions to a
+   folder and copy it to your own machine:
+
+   ```bash
+   sudo netstation-image diff --dir /tmp/imagediff
+   scp -r <server>:/tmp/imagediff . && meld imagediff/production imagediff/staging
+   ```
+
 3. **Test** it: reboot the test client. It boots staging by default; its boot
    menu also lets you pick production.
 4. **Promote** it. Clients switch to it on their next reboot.

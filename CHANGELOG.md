@@ -14,6 +14,8 @@
 - Clients check in with the server every 2 minutes, so `netstation-image
   clients`, status and the Veyon list also see idle clients.
 - The idle logout leaves sessions alone that nobody has used.
+- `netstation-image diff` is colored and paged in a terminal, and `--dir`
+  writes both versions to folders for a diff viewer.
 
 ## 0.3.0 (2026-10-19)
 

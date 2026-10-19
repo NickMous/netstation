@@ -30,8 +30,12 @@ Commands:
   build              Build a fresh staging image from the current build context
   promote            Make the staging image the production image
   rollback [BUILD]   Restore a previous production image (default: the newest)
-  diff [--summary]   Show what changed between production and staging:
-                     packages, and the files netstation puts in the image
+  diff [--summary | --dir DIR]
+                     Show what changed between production and staging:
+                     packages, and the files netstation puts in the image.
+                     In a terminal it's colored and paged like git diff.
+                     --dir writes both versions to DIR/production and
+                     DIR/staging, to open in a diff viewer
   status             Show images, booted clients and services
   clients            List booted clients as "IP MAC", one per line
 EOF
@@ -201,6 +205,66 @@ cmd_diff() {
         return 0
     fi
 
+    if [ "${1:-}" = --dir ]; then
+        export_diff "${2:?usage: netstation-image diff --dir DIR}"
+        return 0
+    fi
+
+    # Like git diff: colored and paged in a terminal, plain otherwise.
+    if [ -t 1 ]; then
+        diff_report "$tmp" | colorize | ${PAGER:-less -FRX}
+    else
+        diff_report "$tmp"
+    fi
+}
+
+# Writes the changed files of both images, and their package lists, to
+# DIR/production and DIR/staging.
+export_diff() {
+    for side in production staging; do
+        rm -rf "${1:?}/$side"
+        mkdir -p "$1/$side"
+    done
+    packages "$PROD_IMG" >"$1/production/packages.txt"
+    packages "$STAGING_IMG" >"$1/staging/packages.txt"
+    awk '{ print $2 }' "$tmp/files" | while read -r path; do
+        for side in production staging; do
+            img=$PROD_IMG
+            [ "$side" = staging ] && img=$STAGING_IMG
+            mkdir -p "$1/$side/$(dirname "$path")"
+            unsquashfs -cat "$img" "$path" >"$1/$side/$path" 2>/dev/null || rm -f "$1/$side/$path"
+        done
+    done
+    # Readable without root by whoever ran sudo.
+    if [ -n "${SUDO_USER:-}" ]; then
+        chown -R "$SUDO_USER:" "$1"
+    fi
+    echo "Wrote $(wc -l <"$tmp/files") changed files and the package lists to $1"
+    echo "Copy the folder to your own machine and open it in a diff viewer, e.g.:"
+    echo "  scp -r $(hostname):$1 . && git diff --no-index $(basename "$1")/production $(basename "$1")/staging"
+    echo "  meld $(basename "$1")/production $(basename "$1")/staging"
+    echo "or open $1 on the server with VS Code's Remote-SSH."
+}
+
+# Colors for the terminal, like git diff. NO_COLOR turns them off.
+colorize() {
+    if [ -n "${NO_COLOR:-}" ]; then
+        cat
+        return
+    fi
+    esc=$(printf '\033')
+    sed -e "s/^\(Staging build .*\|Packages\|Files from netstation\)$/${esc}[1m&${esc}[0m/" \
+        -e "s/^\(      +++ .*\|      --- .*\)$/${esc}[1m&${esc}[0m/" \
+        -e "s/^      @@.*/${esc}[36m&${esc}[0m/" \
+        -e "s/^      +.*/${esc}[32m&${esc}[0m/" \
+        -e "s/^      -.*/${esc}[31m&${esc}[0m/" \
+        -e "s/^  \(added\) /  ${esc}[32m\1${esc}[0m /" \
+        -e "s/^  \(removed\) /  ${esc}[31m\1${esc}[0m /" \
+        -e "s/^  \(updated\|changed\) /  ${esc}[33m\1${esc}[0m /"
+}
+
+diff_report() {
+    tmp=$1
     echo "Staging build $(build_id "$STAGING_IMG") compared with production build $(build_id "$PROD_IMG")"
     echo
     echo "Packages"

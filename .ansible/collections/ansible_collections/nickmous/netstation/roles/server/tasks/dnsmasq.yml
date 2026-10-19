@@ -80,6 +80,14 @@
     mode: "0644"
   notify: Restart dnsmasq
 
+- name: Install netstation-dnsmasq-check
+  ansible.builtin.copy:
+    src: netstation-dnsmasq-check
+    dest: /usr/local/sbin/netstation-dnsmasq-check
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Enable dnsmasq
   ansible.builtin.systemd_service:
     name: dnsmasq

@@ -119,7 +119,9 @@ sudo journalctl -u dnsmasq -f
   log. In proxy mode, also check that the other DHCP server doesn't set
   options 60, 66 or 67.
 - **dnsmasq hangs (high CPU, clients stop booting):** some dnsmasq versions
-  hang in proxy mode. Pin a working version with `netstation_dnsmasq_version`.
+  hang in proxy mode. Check with `sudo netstation-dnsmasq-check` after a
+  client has booted; it measures CPU use, unread packets and whether TFTP
+  still answers. Pin a working version with `netstation_dnsmasq_version`.
 
 ### A client boots but stops with an error
 

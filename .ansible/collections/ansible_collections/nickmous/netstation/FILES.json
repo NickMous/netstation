@@ -109,7 +109,7 @@
    "name": "roles/server/tasks/main.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "cd2d9c4ab421fe1340c9d1d67e211c9b81d6db2959b821cc3601ec5bba0005df",
+   "chksum_sha256": "26e98d2c849b17b21c92df673934e7f0630a3ae886e870799bb3967c0664b322",
    "format": 1
   },
   {
@@ -130,7 +130,7 @@
    "name": "roles/server/tasks/dnsmasq.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "59fb9cdebc9df24783e3125425843ef599adf957ead5dc18ab7532737d6f1391",
+   "chksum_sha256": "47b918fa6face7c8e38a5575175f128ca6ab3b926ea4279b469c0e49a318515f",
    "format": 1
   },
   {
@@ -194,6 +194,20 @@
    "ftype": "file",
    "chksum_type": "sha256",
    "chksum_sha256": "9de37ecf900c37b328494d1b0b9025fe26c7b0aa5ed8f162450239c8a16d8d37",
+   "format": 1
+  },
+  {
+   "name": "roles/server/files",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/server/files/netstation-dnsmasq-check",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f40d01569e21d6df9428cc49471f75d0cf14d8888b263243cc4c097ecd333ffe",
    "format": 1
   },
   {

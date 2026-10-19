@@ -1,0 +1,65 @@
+#!/bin/sh
+# Checks whether dnsmasq still answers, or hangs the way some versions do in
+# proxy DHCP mode: high CPU, packets piling up unread, no answers to clients.
+# The hang starts after a client has network-booted, so boot one first.
+# Usage: sudo netstation-dnsmasq-check [seconds to measure, default 10]
+# Exit status: 0 healthy, 1 hanging or not running.
+set -u
+
+seconds=${1:-10}
+tftp_file=ltsp/undionly.kpxe
+
+version=$(dpkg-query -W -f '${Version}' dnsmasq 2>/dev/null || echo "not installed")
+hold=$(dpkg-query -W -f '${Status}' dnsmasq 2>/dev/null | cut -d' ' -f1)
+echo "dnsmasq version: $version${hold:+ ($hold)}"
+
+pid=$(systemctl show -p MainPID --value dnsmasq)
+if [ "${pid:-0}" -eq 0 ]; then
+    echo "HANGING OR DOWN: dnsmasq is not running"
+    exit 1
+fi
+
+# CPU time used by dnsmasq (fields 14 and 15 of /proc/<pid>/stat, in ticks).
+cpu_ticks() {
+    awk '{ print $14 + $15 }' "/proc/$pid/stat"
+}
+
+# Bytes waiting unread on dnsmasq's DHCP, proxy DHCP and TFTP ports.
+queued() {
+    ss -Hunl '( sport = :67 or sport = :4011 or sport = :69 )' |
+        awk '{ sum += $2 } END { print sum + 0 }'
+}
+
+queue_start=$(queued)
+ticks_start=$(cpu_ticks)
+sleep "$seconds"
+ticks_end=$(cpu_ticks)
+queue_end=$(queued)
+
+cpu=$(( (ticks_end - ticks_start) * 100 / ($(getconf CLK_TCK) * seconds) ))
+echo "CPU use over ${seconds}s: ${cpu}%"
+echo "Unread bytes: $queue_start at the start, $queue_end at the end"
+
+# dnsmasq serves TFTP from the same loop as DHCP, so a hang stops this too.
+if curl -fsS --max-time 5 -o /dev/null "tftp://127.0.0.1/$tftp_file"; then
+    tftp=ok
+    echo "TFTP answers: yes"
+else
+    tftp=failed
+    echo "TFTP answers: no ($tftp_file)"
+fi
+
+problems=0
+[ "$cpu" -ge 50 ] && problems=$((problems + 1))
+[ "$queue_start" -gt 0 ] && [ "$queue_end" -gt 0 ] && problems=$((problems + 1))
+[ "$tftp" = failed ] && problems=$((problems + 1))
+
+if [ "$problems" -ge 2 ]; then
+    echo "HANGING: restart it with: sudo systemctl restart dnsmasq"
+    echo "and pin a working version (netstation_dnsmasq_version)."
+    exit 1
+elif [ "$problems" -eq 1 ]; then
+    echo "OK, with one warning sign above. Run the check again in a minute."
+else
+    echo "OK"
+fi

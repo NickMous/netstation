@@ -22,6 +22,8 @@
       - squashfs-tools
       - nginx
       - wakeonlan
+      # For netstation-dnsmasq-check.
+      - curl
     state: present
     install_recommends: false
     update_cache: true

@@ -21,6 +21,8 @@ netstation_rootfs_templates:
   - dest: etc/xdg/autostart/netstation-numlock.desktop
     when: "{{ netstation_numlock }}"
   - dest: etc/xdg/mimeapps.list
+  - dest: etc/systemd/timesyncd.conf.d/netstation.conf
+    when: "{{ netstation_ntp_servers | length > 0 }}"
   - dest: etc/xdg/xfce4/panel/default.xml
     when: "{{ netstation_panel_show_address }}"
   - dest: etc/xdg/xfce4/panel/genmon-19.rc

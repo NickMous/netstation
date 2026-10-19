@@ -39,6 +39,10 @@ netstation_firefox_language: ""
 # (https://mozilla.github.io/policy-templates/).
 netstation_firefox_policies: {}
 
+# Time servers for the clients, e.g. a Windows domain controller. Empty uses
+# Debian's public NTP pool.
+netstation_ntp_servers: []
+
 # --- Packages ---------------------------------------------------------------
 
 netstation_image_components:
@@ -68,6 +72,8 @@ netstation_image_packages_system:
   - keyboard-configuration
   - console-setup
   - ca-certificates
+  # Keeps the clock right; RDP logins (NLA) and HTTPS fail when it drifts.
+  - systemd-timesyncd
 
 netstation_image_packages_firmware:
   - firmware-linux-free

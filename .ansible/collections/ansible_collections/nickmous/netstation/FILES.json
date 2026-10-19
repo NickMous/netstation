@@ -207,7 +207,7 @@
    "name": "roles/server/files/netstation-dnsmasq-check",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "f40d01569e21d6df9428cc49471f75d0cf14d8888b263243cc4c097ecd333ffe",
+   "chksum_sha256": "3898c28369f9826060c5c73f050511c175f62208f932905a0a153018e486df16",
    "format": 1
   },
   {
@@ -340,7 +340,7 @@
    "name": "roles/image/templates/rootfs/etc/lightdm/lightdm.conf.d/70-netstation.conf.j2",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "7fd0a6ea5861d5374dbd43465be153afc73b113ef18770d4e0ee8203c1ab31ef",
+   "chksum_sha256": "d461ea49b3ff781fcfcd2124c246f3cae55ed8138beee251d9ca411167ef2d05",
    "format": 1
   },
   {
@@ -557,7 +557,7 @@
    "name": "roles/image/templates/rootfs/usr/local/sbin/netstation-reset-home.j2",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "8d2416052e6f2e1f2f8f7c77cea0c46735572cd9c5189913a1513e695e5faf3b",
+   "chksum_sha256": "988b0b6d664f0902eab6b1026550cbc981f6c9e6fa5583ce1d0922c2401776f2",
    "format": 1
   },
   {
@@ -1019,7 +1019,7 @@
    "name": "CHANGELOG.md",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "b0fa8302b20c862393d961e5f893eae6c09d91f602e777ee31b8d5e5d257247d",
+   "chksum_sha256": "7578574e4f28c131956f63a72b032805f51656dd07cb15f13a7516639f2cb65b",
    "format": 1
   },
   {

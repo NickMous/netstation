@@ -1,5 +1,10 @@
 # {{ ansible_managed }}
 # Serves the network-boot files (the same folder TFTP serves) over HTTP.
+
+# Clients check in every 2 minutes (netstation-heartbeat); netstation-image
+# reads this log to tell which clients are on.
+log_format netstation_alive '$msec $remote_addr $arg_mac $arg_host';
+
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -9,4 +14,9 @@ server {
     autoindex off;
     sendfile on;
     tcp_nopush on;
+
+    location = /netstation-alive {
+        access_log /var/log/nginx/netstation-alive.log netstation_alive;
+        return 204;
+    }
 }

@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# Started by the netstation-power-off-*.timer units; %i is the idle minutes.
+[Unit]
+Description=Switch off when not used (%i minutes)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/netstation-power-off-if-idle %i

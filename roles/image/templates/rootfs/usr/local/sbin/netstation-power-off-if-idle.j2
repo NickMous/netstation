@@ -1,0 +1,20 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Switches the client off when nobody is using it.
+# Usage: netstation-power-off-if-idle MINUTES
+#   0:  only when it wasn't used at all since it was switched on
+#   >0: also when there was no keyboard or mouse input for that many minutes
+set -u
+
+minutes=${1:-0}
+last=$(cat /run/netstation/last-input 2>/dev/null || echo 0)
+
+if [ "$last" -eq 0 ]; then
+    echo "Not used since it was switched on; switching off"
+elif [ "$minutes" -gt 0 ] && [ "$(($(date +%s) - last))" -ge "$((minutes * 60))" ]; then
+    echo "No input for $minutes minutes or more; switching off"
+else
+    echo "In use; staying on"
+    exit 0
+fi
+systemctl poweroff

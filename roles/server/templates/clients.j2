@@ -1,0 +1,3 @@
+{% for client in netstation_clients %}
+{{ client.mac | lower }} {{ client.hostname | default('') }}
+{% endfor %}

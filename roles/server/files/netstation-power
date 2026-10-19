@@ -1,0 +1,57 @@
+#!/bin/sh
+# Power schedule on the server, started by the netstation-power-*.timer units.
+#   netstation-power wake    Wake all known clients with Wake-on-LAN
+#   netstation-power learn   Remember the clients that are on now, for wake
+#   netstation-power report  Send a Pushover alert listing the clients that are on
+set -eu
+
+# shellcheck source=/dev/null
+. /etc/netstation/power.env
+
+known=/var/lib/netstation/known-clients
+
+# Clients that are on now: "IP MAC".
+clients_on() {
+    /usr/local/sbin/netstation-image clients | awk '$2 != "unknown"'
+}
+
+# A client's name from netstation_clients, or its IP address.
+name_of() {
+    awk -v mac="$2" '$1 == mac { print $2; found = 1 } END { if (!found) print "" }' \
+        /etc/netstation/clients | grep . || echo "$1"
+}
+
+case ${1:-} in
+wake)
+    macs=$( (awk '{ print $1 }' /etc/netstation/clients; awk '{ print $1 }' "$known" 2>/dev/null) |
+        sort -u)
+    [ -n "$macs" ] || { echo "No known clients to wake"; exit 0; }
+    # shellcheck disable=SC2086 # one argument per MAC address
+    wakeonlan -i "$NETSTATION_WAKE_BROADCAST" $macs
+    ;;
+learn)
+    mkdir -p "${known%/*}"
+    touch "$known"
+    clients_on | while read -r ip mac; do
+        grep -v "^$mac " "$known" >"$known.new" || true
+        echo "$mac $ip $(date +%F)" >>"$known.new"
+        mv "$known.new" "$known"
+    done
+    ;;
+report)
+    on=$(clients_on | while read -r ip mac; do
+        name=$(name_of "$ip" "$mac")
+        if [ "$name" = "$ip" ]; then echo "$ip ($mac)"; else echo "$name ($ip)"; fi
+    done)
+    [ -n "$on" ] || exit 0
+    message="$(echo "$on" | wc -l) still on: $(echo "$on" | paste -sd ',' - | sed 's/,/, /g')"
+    echo "$message"
+    if [ -x /usr/local/sbin/netstation-notify ] && [ -f /etc/netstation/alerts.env ]; then
+        /usr/local/sbin/netstation-notify "Clients still on" "$message"
+    fi
+    ;;
+*)
+    echo "Usage: netstation-power wake|learn|report" >&2
+    exit 1
+    ;;
+esac

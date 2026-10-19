@@ -35,3 +35,16 @@ netstation_veyon_enabled: false
 #   - name: admin
 #     key: "{{ lookup('file', 'files/veyon/admin-public.pem') }}"
 netstation_veyon_public_keys: []
+
+# Power schedule. Times use systemd's OnCalendar format in the local time
+# zone, e.g. "08:45" or "Mon..Fri 08:45".
+# Wake the clients with Wake-on-LAN: those in netstation_clients and every
+# client that booted from this server before.
+netstation_power_wake: []
+# Switch clients off when nobody is using them:
+#   - at: "10:00"             # not used since it was switched on
+#   - at: "18:30"
+#     idle_minutes: 15        # or: no keyboard or mouse input for 15 minutes
+netstation_power_off: []
+# Send a Pushover alert listing the clients that are still on.
+netstation_power_report: []

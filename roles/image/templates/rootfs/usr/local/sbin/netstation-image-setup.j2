@@ -31,8 +31,15 @@ update-initramfs -u -k all
 
 echo "==> Services"
 systemctl enable ssh
+systemctl enable netstation-heartbeat.timer
 {% if netstation_wake_on_lan %}
 systemctl enable netstation-wol
+{% endif %}
+{% if netstation_power_off | length > 0 %}
+systemctl enable netstation-activity
+for timer in /etc/systemd/system/netstation-power-off-*.timer; do
+    systemctl enable "$(basename "$timer")"
+done
 {% endif %}
 {% if netstation_veyon_enabled %}
 for key in /etc/netstation/veyon/*.pem; do

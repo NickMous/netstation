@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Tell the netstation server this client is on
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/netstation-heartbeat

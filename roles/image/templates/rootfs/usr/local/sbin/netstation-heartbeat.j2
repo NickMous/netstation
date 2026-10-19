@@ -1,0 +1,13 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Tells the server this client is on, with its MAC address and name. The
+# server's netstation-image clients reads these check-ins.
+set -u
+
+server=$(tr ' ' '\n' </proc/cmdline | sed -n 's/^nfsroot=\([^:]*\):.*/\1/p')
+[ -n "$server" ] || exit 0
+dev=$(ip -o route get "$server" | sed -n 's/.* dev \([^ ]*\).*/\1/p')
+mac=$(cat "/sys/class/net/$dev/address")
+
+curl -fsS --max-time 10 -o /dev/null \
+    "http://$server/netstation-alive?mac=$mac&host=$(hostname)"

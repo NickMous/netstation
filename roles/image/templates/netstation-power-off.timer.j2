@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Switch off at {{ item.at }} {{ 'when there was no input for ' ~ item.idle_minutes ~ ' minutes' if item.idle_minutes | default(0) | int > 0 else 'when not used since switched on' }}
+
+[Timer]
+OnCalendar={{ item.at }}
+Unit=netstation-power-off@{{ item.idle_minutes | default(0) | int }}.service
+
+[Install]
+WantedBy=timers.target

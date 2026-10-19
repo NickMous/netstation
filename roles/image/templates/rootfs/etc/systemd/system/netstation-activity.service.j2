@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Record when the client was last used
+After=lightdm.service
+
+[Service]
+ExecStart=/usr/local/sbin/netstation-activity
+
+[Install]
+WantedBy=multi-user.target

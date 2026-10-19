@@ -1,0 +1,18 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Records the time of the last keyboard or mouse input in
+# /run/netstation/last-input, across logouts, for netstation-power-off-if-idle.
+set -u
+
+state=/run/netstation/last-input
+mkdir -p "${state%/*}"
+
+while sleep 30; do
+    xorg=$(pgrep -o -x Xorg) || continue
+    idle=$(DISPLAY=:0 XAUTHORITY=/var/run/lightdm/root/:0 xprintidle 2>/dev/null) || continue
+    age=$(ps -o etimes= -p "$xorg" | tr -d ' ')
+    # The idle time starts at 0 with every X server (every login), so only
+    # count it as input when it's clearly shorter than the X server's age.
+    [ "$((idle / 1000))" -lt "$((age - 10))" ] || continue
+    echo "$(($(date +%s) - idle / 1000))" >"$state"
+done

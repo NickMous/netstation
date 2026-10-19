@@ -1,0 +1,78 @@
+---
+# The server's part of the power schedule: waking clients, remembering which
+# clients exist, and reporting the ones still on. The clients switch
+# themselves off (image role).
+
+# Remembering the clients that are on (learn) lets wake reach clients that
+# aren't listed in netstation_clients.
+- name: Set the power timers
+  ansible.builtin.set_fact:
+    netstation_power_timers: >-
+      {{ ([{'action': 'wake', 'times': netstation_power_wake}] if netstation_power_wake | length > 0 else [])
+         + ([{'action': 'learn', 'times': [], 'interval': '10min'}] if netstation_power_wake | length > 0 else [])
+         + ([{'action': 'report', 'times': netstation_power_report}] if netstation_power_report | length > 0 else []) }}
+
+- name: Write the power settings and the known clients
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "/etc/netstation/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - { src: power.env.j2, dest: power.env }
+    - { src: clients.j2, dest: clients }
+
+- name: Install netstation-power
+  ansible.builtin.copy:
+    src: netstation-power
+    dest: /usr/local/sbin/netstation-power
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the power service
+  ansible.builtin.template:
+    src: netstation-power@.service.j2
+    dest: /etc/systemd/system/netstation-power@.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: netstation_power_service
+
+- name: Stop the unused power timers
+  ansible.builtin.systemd_service:
+    name: "netstation-power-{{ item }}.timer"
+    enabled: false
+    state: stopped
+  loop: "{{ ['wake', 'learn', 'report'] | difference(netstation_power_timers | map(attribute='action')) }}"
+  # The timer may never have been installed.
+  failed_when: false
+
+- name: Remove the unused power timers
+  ansible.builtin.file:
+    path: "/etc/systemd/system/netstation-power-{{ item }}.timer"
+    state: absent
+  loop: "{{ ['wake', 'learn', 'report'] | difference(netstation_power_timers | map(attribute='action')) }}"
+
+- name: Install the power timers
+  ansible.builtin.template:
+    src: netstation-power.timer.j2
+    dest: "/etc/systemd/system/netstation-power-{{ item.action }}.timer"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ netstation_power_timers }}"
+  loop_control:
+    label: "{{ item.action }}"
+  register: netstation_power_timer_files
+
+- name: Start the power timers
+  ansible.builtin.systemd_service:
+    name: "netstation-power-{{ item.item.action }}.timer"
+    daemon_reload: true
+    enabled: true
+    state: "{{ 'restarted' if item is changed else 'started' }}"
+  loop: "{{ netstation_power_timer_files.results }}"
+  loop_control:
+    label: "{{ item.item.action }}"

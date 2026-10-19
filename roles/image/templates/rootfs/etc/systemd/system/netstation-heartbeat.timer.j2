@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Tell the netstation server every 2 minutes that this client is on
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=2min
+
+[Install]
+WantedBy=timers.target

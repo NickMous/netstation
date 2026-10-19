@@ -11,7 +11,7 @@ netstation_image_packages: >-
       + (['xfce4-genmon-plugin'] if netstation_panel_show_address else [])
       + (['ethtool'] if netstation_wake_on_lan else [])
       + (['cups-daemon', 'ipp-usb', 'avahi-daemon'] if netstation_rdp_printers else [])
-      + (['xprintidle'] if netstation_idle_logout_minutes | int > 0 else [])
+      + (['xprintidle'] if netstation_idle_logout_minutes | int > 0 or netstation_power_off | length > 0 else [])
       + netstation_image_extra_packages) | unique }}
 
 # Files rendered into the image; dest is relative to the image root.
@@ -44,6 +44,20 @@ netstation_rootfs_templates:
   - dest: usr/local/sbin/netstation-usb-mount
     mode: "0755"
     when: "{{ netstation_rdp_usb_drives }}"
+  - dest: usr/local/sbin/netstation-activity
+    mode: "0755"
+    when: "{{ netstation_power_off | length > 0 }}"
+  - dest: etc/systemd/system/netstation-activity.service
+    when: "{{ netstation_power_off | length > 0 }}"
+  - dest: usr/local/sbin/netstation-power-off-if-idle
+    mode: "0755"
+    when: "{{ netstation_power_off | length > 0 }}"
+  - dest: etc/systemd/system/netstation-power-off@.service
+    when: "{{ netstation_power_off | length > 0 }}"
+  - dest: usr/local/sbin/netstation-heartbeat
+    mode: "0755"
+  - dest: etc/systemd/system/netstation-heartbeat.service
+  - dest: etc/systemd/system/netstation-heartbeat.timer
   - dest: usr/local/bin/netstation-rdp-open
     mode: "0755"
   - dest: usr/local/sbin/netstation-reset-home

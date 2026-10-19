@@ -109,6 +109,9 @@
 - name: Firewall
   ansible.builtin.import_tasks: firewall.yml
 
+- name: Power schedule
+  ansible.builtin.import_tasks: power.yml
+
 - name: Generate the LTSP initrd for the first time
   ansible.builtin.command: ltsp initrd
   args:

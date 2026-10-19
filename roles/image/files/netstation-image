@@ -273,14 +273,21 @@ cmd_rollback() {
     log "Production is now build $rollback_id. Clients pick it up on their next boot."
 }
 
-# Clients booted from this server: they keep the image open over NFS.
+# Clients that are on: those that checked in during the last 5 minutes
+# (netstation-heartbeat, every 2 minutes), plus those reading the image over
+# NFS right now (images from before the heartbeat). An idle client closes its
+# NFS connection after a few minutes, so NFS alone misses idle clients.
 cmd_clients() {
-    ss -Htn state established '( sport = :2049 )' | awk '{print $4}' |
-        sed 's/^\[::ffff://; s/\]\{0,1\}:[0-9]*$//' | sort -uV |
-        while read -r ip; do
-            mac=$(ip neigh show "$ip" | awk '{ for (i = 1; i < NF; i++) if ($i == "lladdr") print $(i + 1) }')
-            echo "$ip ${mac:-unknown}"
-        done
+    {
+        awk -v since="$(($(date +%s) - 300))" '$1 >= since && $3 != "" { print $2, $3 }' \
+            /var/log/nginx/netstation-alive.log 2>/dev/null
+        ss -Htn state established '( sport = :2049 )' | awk '{print $4}' |
+            sed 's/^\[::ffff://; s/\]\{0,1\}:[0-9]*$//' | sort -u |
+            while read -r ip; do
+                mac=$(ip neigh show "$ip" | awk '{ for (i = 1; i < NF; i++) if ($i == "lladdr") print $(i + 1) }')
+                echo "$ip ${mac:-unknown}"
+            done
+    } | awk '{ ip[$2] = $1 } END { for (mac in ip) print ip[mac], mac }' | sort -V
 }
 
 describe() {

@@ -87,6 +87,8 @@ netstation_image_packages_system:
   - keyboard-configuration
   - console-setup
   - ca-certificates
+  # Checking in with the server (netstation-heartbeat).
+  - curl
   # Keeps the clock right; RDP logins (NLA) and HTTPS fail when it drifts.
   - systemd-timesyncd
 

@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+[Unit]
+Description=netstation power schedule: {{ item.action }}
+
+[Timer]
+{% for at in item.times %}
+OnCalendar={{ at }}
+{% endfor %}
+{% if item.interval is defined %}
+OnBootSec=5min
+OnUnitActiveSec={{ item.interval }}
+{% endif %}
+Unit=netstation-power@{{ item.action }}.service
+
+[Install]
+WantedBy=timers.target

@@ -56,6 +56,18 @@
     label: "{{ item.dest }}"
   when: item.when | default(true) | bool
 
+- name: Write the power-off timers
+  ansible.builtin.template:
+    src: netstation-power-off.timer.j2
+    dest: "{{ netstation_context_new }}/rootfs/etc/systemd/system/netstation-power-off-{{ index }}.timer"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ netstation_power_off }}"
+  loop_control:
+    index_var: index
+    label: "{{ item.at }}"
+
 - name: Add the desktop shortcuts
   when: netstation_desktop_shortcuts | length > 0
   block:

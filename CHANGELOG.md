@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0 (2026-10-19)
+
+- Pushover alerts (`alerts` role, on when `netstation_pushover_app_token` and
+  `netstation_pushover_user_key` are set): failed builds and services, a
+  hanging dnsmasq, a full disk, failed security updates, a reboot needed for a
+  new kernel, and a staging build ready to test.
+- Automatic security updates on the server
+  (`netstation_server_security_updates`, on by default; no automatic reboots).
+- `netstation-image diff` and the `image_diff` playbook show what changed
+  between production and staging; `image_build` shows it at the end.
+- The idle logout now logs out at `netstation_idle_logout_minutes`, with the
+  warning `netstation_idle_logout_warning_seconds` before it.
+
 ## 0.1.0 (2026-10-19)
 
 First release.

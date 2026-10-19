@@ -3,3 +3,4 @@
 .vault_pass*
 build/
 collections/
+.ansible/

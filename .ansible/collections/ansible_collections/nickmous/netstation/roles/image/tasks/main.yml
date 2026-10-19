@@ -1,6 +1,0 @@
----
-- name: Install the image tooling
-  ansible.builtin.import_tasks: install.yml
-
-- name: Prepare the build context
-  ansible.builtin.import_tasks: context.yml

@@ -1,6 +1,0 @@
----
-collections:
-  - name: https://github.com/NickMous/netstation.git
-    type: git
-    # Pin a release tag; change it deliberately to upgrade.
-    version: v0.1.0

@@ -1,6 +1,0 @@
-#!ipxe
-# {{ ansible_managed }}
-# Loaded over TFTP; switches to HTTP for LTSP's menu, kernel and initrd.
-# Falls back to TFTP if the web server is down.
-isset ${proxydhcp/dhcp-server} && set srv ${proxydhcp/dhcp-server} || set srv ${next-server}
-chain http://${srv}/ltsp/ltsp.ipxe || chain tftp://${srv}/ltsp/ltsp.ipxe

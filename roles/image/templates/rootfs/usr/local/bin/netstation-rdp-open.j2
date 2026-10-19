@@ -15,6 +15,6 @@ user=$(printf '%s\n' "$content" | tr -d '\r' | grep -i -m 1 '^username:s:' | cut
 
 pass=$(zenity --password --title="Remote Desktop${user:+ - $user}") || exit 0
 
-xfreerdp3 "$file" /p:"$pass" {{ netstation_rdp_options | map('quote') | join(' ') }} ||
+xfreerdp3 "$file" /p:"$pass" {{ (netstation_rdp_redirect_options + netstation_rdp_options) | map('quote') | join(' ') }} ||
     zenity --error --title="Remote Desktop" \
         --text="The connection failed. Check your password and try again."

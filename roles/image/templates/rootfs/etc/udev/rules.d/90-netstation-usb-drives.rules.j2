@@ -1,0 +1,3 @@
+# {{ ansible_managed }}
+# Mount USB sticks under /media/{{ netstation_session_user }}/, where xfreerdp3 (/drive:hotplug) picks them up.
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_BUS}=="usb", ENV{ID_FS_USAGE}=="filesystem", RUN+="/usr/local/sbin/netstation-usb-mount $devnode"

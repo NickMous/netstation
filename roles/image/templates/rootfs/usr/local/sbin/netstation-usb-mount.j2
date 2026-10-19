@@ -1,0 +1,21 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Mounts a USB stick for the session user, so RDP sessions can use it.
+# Called by udev with the device; systemd unmounts it when it's pulled out.
+set -eu
+
+dev=$1
+user={{ netstation_session_user | quote }}
+type=$(blkid -o value -s TYPE "$dev" || true)
+label=$(blkid -o value -s LABEL "$dev" | tr -c 'A-Za-z0-9._\n-' '_' || true)
+name=${label:-$(basename "$dev")}
+
+case $type in
+vfat) options="uid=$user,gid=$user,umask=0077,flush" ;;
+exfat | ntfs3) options="uid=$user,gid=$user,umask=0077" ;;
+ntfs) type=ntfs3 options="uid=$user,gid=$user,umask=0077" ;;
+*) exit 0 ;;
+esac
+
+exec systemd-mount --no-block --collect --type="$type" --options="$options" \
+    "$dev" "/media/$user/$name"

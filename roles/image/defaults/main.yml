@@ -37,6 +37,15 @@ netstation_idle_logout_message: >-
 netstation_rdp_options:
   - /cert:tofu
 
+# Pass these through into RDP sessions:
+#   sound:      the session's audio plays on the client
+#   usb_drives: USB sticks plugged into the client show up as drives
+#   printers:   printers the client knows (driverless USB printers via
+#               ipp-usb, and network printers it discovers)
+netstation_rdp_sound: false
+netstation_rdp_usb_drives: false
+netstation_rdp_printers: false
+
 # Firefox's own language, e.g. "nl" or "de" (installs firefox-esr-l10n-<language>).
 # Empty keeps English. The rest of the desktop follows netstation_locale.
 netstation_firefox_language: ""

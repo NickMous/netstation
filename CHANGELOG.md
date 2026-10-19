@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `image_diff` copies both versions to `build/image-diff/` in your
+  configuration repository, to open in a diff viewer.
+
 ## 0.4.0 (2026-10-19)
 
 - The clients keep their clocks in sync (systemd-timesyncd);

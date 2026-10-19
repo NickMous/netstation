@@ -1,9 +1,14 @@
 ---
 # What changed between the production and the staging image: packages, and
-# the files netstation puts in the image. Changes nothing.
+# the files netstation puts in the image. Changes nothing on the server.
+# Both versions are also copied to build/image-diff/ in your configuration
+# repository, to open in a diff viewer (git diff --no-index, meld, VS Code).
 - name: Compare staging with production
   hosts: netstation_servers
   become: true
+  vars:
+    netstation_image_diff_dir: "{{ inventory_dir }}/../build/image-diff"
+    netstation_image_diff_remote: /var/tmp/netstation-image-diff
   tasks:
     - name: Compare the images
       ansible.builtin.command: /usr/local/sbin/netstation-image diff
@@ -13,3 +18,58 @@
     - name: Show what changed
       ansible.builtin.debug:
         msg: "{{ netstation_diff.stdout_lines }}"
+
+    - name: Write both versions on the server
+      ansible.builtin.shell: >-
+        /usr/local/sbin/netstation-image diff --dir {{ netstation_image_diff_remote | quote }} >/dev/null &&
+        tar -C {{ netstation_image_diff_remote | quote }} -czf {{ (netstation_image_diff_remote ~ '.tar.gz') | quote }} .
+      changed_when: false
+
+    - name: Copy them to this machine
+      ansible.builtin.fetch:
+        src: "{{ netstation_image_diff_remote }}.tar.gz"
+        dest: "{{ netstation_image_diff_dir }}.tar.gz"
+        flat: true
+
+    - name: Remove them from the server
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ netstation_image_diff_remote }}"
+        - "{{ netstation_image_diff_remote }}.tar.gz"
+
+    - name: Unpack them on this machine
+      delegate_to: localhost
+      become: false
+      block:
+        - name: Remove the previous comparison
+          ansible.builtin.file:
+            path: "{{ netstation_image_diff_dir }}"
+            state: absent
+
+        - name: Create the folder
+          ansible.builtin.file:
+            path: "{{ netstation_image_diff_dir }}"
+            state: directory
+            mode: "0755"
+
+        - name: Unpack
+          ansible.builtin.unarchive:
+            src: "{{ netstation_image_diff_dir }}.tar.gz"
+            dest: "{{ netstation_image_diff_dir }}"
+
+        - name: Remove the download
+          ansible.builtin.file:
+            path: "{{ netstation_image_diff_dir }}.tar.gz"
+            state: absent
+
+    - name: Show how to open them
+      vars:
+        netstation_dir: "{{ netstation_image_diff_dir | realpath }}"
+      ansible.builtin.debug:
+        msg:
+          - "Both versions are in {{ netstation_dir }}. Open them with a diff viewer, e.g.:"
+          - "git diff --no-index {{ netstation_dir }}/production {{ netstation_dir }}/staging"
+          - "meld {{ netstation_dir }}/production {{ netstation_dir }}/staging"
+          - "code --diff {{ netstation_dir }}/production/packages.txt {{ netstation_dir }}/staging/packages.txt"

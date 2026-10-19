@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Check every {{ netstation_dnsmasq_watchdog_interval }} whether dnsmasq hangs
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec={{ netstation_dnsmasq_watchdog_interval }}
+
+[Install]
+WantedBy=timers.target

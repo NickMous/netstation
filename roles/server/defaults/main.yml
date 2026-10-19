@@ -40,6 +40,10 @@ netstation_dnsmasq_version: ""
 # server's own (added as a package source used only for that version).
 netstation_dnsmasq_suite: ""
 netstation_dnsmasq_log_dhcp: false
+# Restart dnsmasq when it hangs (checked with netstation-dnsmasq-check), and
+# report it with Pushover when alerts are set up.
+netstation_dnsmasq_watchdog: true
+netstation_dnsmasq_watchdog_interval: 2min
 # Extra lines appended to the dnsmasq configuration.
 netstation_dnsmasq_extra: []
 

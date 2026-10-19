@@ -1,0 +1,42 @@
+#!/bin/sh
+# Restarts dnsmasq when it hangs (see netstation-dnsmasq-check) and reports
+# it with Pushover when alerts are set up. Started by
+# netstation-dnsmasq-watchdog.timer.
+set -u
+
+# Set while dnsmasq keeps hanging after a restart, so that's reported once.
+stuck=/run/netstation-dnsmasq-stuck
+
+notify() {
+    if [ -x /usr/local/sbin/netstation-notify ] && [ -f /etc/netstation/alerts.env ]; then
+        /usr/local/sbin/netstation-notify "$1" "$2" || true
+    fi
+}
+
+[ "$(systemctl is-active dnsmasq)" = active ] || exit 0
+if netstation-dnsmasq-check 5 >/dev/null 2>&1; then
+    if [ -e "$stuck" ]; then
+        rm -f "$stuck"
+        notify "dnsmasq works again" "Clients can network-boot again."
+    fi
+    exit 0
+fi
+
+echo "dnsmasq hangs; restarting it"
+# A hanging dnsmasq ignores SIGTERM, so kill it right away instead of waiting
+# for systemd's stop timeout. The marker keeps the "failed" alert quiet: this
+# script reports it.
+quiet=/run/netstation-quiet-dnsmasq.service
+touch "$quiet"
+systemctl kill --signal=KILL dnsmasq
+sleep 1
+systemctl reset-failed dnsmasq 2>/dev/null
+systemctl restart dnsmasq
+sleep 2
+rm -f "$quiet"
+if netstation-dnsmasq-check 5 >/dev/null 2>&1; then
+    notify "dnsmasq restarted" "dnsmasq hung and was restarted; clients can network-boot again. If this happens often, pin another version (netstation_dnsmasq_version)."
+elif [ ! -e "$stuck" ]; then
+    touch "$stuck"
+    notify "dnsmasq still hangs" "dnsmasq hangs even after a restart, so clients can't network-boot. Check: sudo netstation-dnsmasq-check"
+fi

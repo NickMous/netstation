@@ -9,6 +9,8 @@ set -eu
 
 if [ "${1:-}" = --failed ]; then
     unit=${2:?unit name missing}
+    # Another script handles and reports this failure (e.g. the dnsmasq watchdog).
+    [ ! -e "/run/netstation-quiet-$unit" ] || exit 0
     title="$unit failed"
     message=$(journalctl -u "$unit" -n 15 -o cat --no-pager 2>&1)
 else

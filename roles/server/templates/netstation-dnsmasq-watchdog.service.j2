@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Restart dnsmasq when it hangs
+After=dnsmasq.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/netstation-dnsmasq-watchdog

@@ -22,11 +22,6 @@ for service in $NETSTATION_ALERTS_SERVICES; do
     [ "$active" = active ] || problem "service-$service" "$service is ${active:-unknown}."
 done
 
-if [ "$(systemctl is-active dnsmasq)" = active ] &&
-    ! netstation-dnsmasq-check 5 >/dev/null 2>&1; then
-    problem dnsmasq-hang "dnsmasq hangs, so clients can't network-boot. Restart it: sudo systemctl restart dnsmasq"
-fi
-
 df -P / "$NETSTATION_BASE_DIR" | awk 'NR > 1 { sub(/%/, "", $5); print $5, $6 }' | sort -u |
     while read -r used mount; do
         [ "$used" -lt "$NETSTATION_ALERTS_DISK_PERCENT" ] ||

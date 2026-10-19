@@ -93,3 +93,30 @@
     name: dnsmasq
     enabled: true
     state: started
+
+- name: Install the dnsmasq watchdog
+  ansible.builtin.copy:
+    src: netstation-dnsmasq-watchdog
+    dest: /usr/local/sbin/netstation-dnsmasq-watchdog
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the dnsmasq watchdog units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - netstation-dnsmasq-watchdog.service
+    - netstation-dnsmasq-watchdog.timer
+  register: netstation_watchdog_units
+
+- name: Enable or disable the dnsmasq watchdog
+  ansible.builtin.systemd_service:
+    name: netstation-dnsmasq-watchdog.timer
+    daemon_reload: "{{ netstation_watchdog_units is changed }}"
+    enabled: "{{ netstation_dnsmasq_watchdog }}"
+    state: "{{ 'started' if netstation_dnsmasq_watchdog else 'stopped' }}"

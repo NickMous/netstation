@@ -17,8 +17,9 @@ netstation_alerts_services:
   - nfs-server
   - nginx
 
-# How often the health check runs: services, dnsmasq hang, disk space,
-# security updates and pending reboots.
+# How often the health check runs: services, disk space, security updates
+# and pending reboots. A hanging dnsmasq is reported by its watchdog
+# (netstation_dnsmasq_watchdog).
 netstation_alerts_check_interval: 10min
 # Alert when a disk is fuller than this, in percent.
 netstation_alerts_disk_percent: 85

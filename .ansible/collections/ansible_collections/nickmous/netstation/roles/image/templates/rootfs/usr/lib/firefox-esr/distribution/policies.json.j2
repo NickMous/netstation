@@ -1,0 +1,32 @@
+{% set defaults = {
+  'Homepage': {'URL': netstation_homepage, 'StartPage': 'homepage'},
+  'OverrideFirstRunPage': '',
+  'OverridePostUpdatePage': '',
+  'DontCheckDefaultBrowser': true,
+  'DisableTelemetry': true,
+  'NoDefaultBookmarks': true,
+  'PasswordManagerEnabled': false,
+  'OfferToSaveLogins': false,
+  'DisableFormHistory': true,
+  'AutofillAddressEnabled': false,
+  'AutofillCreditCardEnabled': false,
+  'UserMessaging': {
+    'SkipOnboarding': true,
+    'ExtensionRecommendations': false,
+    'FeatureRecommendations': false,
+    'MoreFromMozilla': false,
+    'Locked': true
+  },
+  'Preferences': {
+    'datareporting.policy.dataSubmissionPolicyBypassNotification': {'Value': true, 'Status': 'locked'},
+    'datareporting.policy.firstRunURL': {'Value': '', 'Status': 'locked'}
+  },
+  'Handlers': {
+    'mimeTypes': {'application/x-rdp': {'action': 'useSystemDefault', 'ask': false}},
+    'extensions': {'rdp': {'action': 'useSystemDefault', 'ask': false}}
+  }
+} %}
+{% if netstation_firefox_language | length > 0 %}
+{% set defaults = defaults | combine({'RequestedLocales': [netstation_firefox_language]}) %}
+{% endif %}
+{{ {'policies': defaults | combine(netstation_firefox_policies, recursive=True)} | to_nice_json(indent=2) }}

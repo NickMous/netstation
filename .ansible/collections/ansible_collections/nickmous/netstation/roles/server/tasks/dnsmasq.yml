@@ -1,0 +1,87 @@
+---
+# A pinned version may come from another Debian release (netstation_dnsmasq_suite).
+# That release gets priority 1, so apt only takes packages from it when asked
+# for an exact version, never as an upgrade.
+- name: Add the package source for the pinned dnsmasq
+  when: netstation_dnsmasq_suite | length > 0
+  block:
+    - name: Add the extra package source
+      ansible.builtin.copy:
+        content: |
+          # Managed by Ansible (nickmous.netstation)
+          Types: deb
+          URIs: {{ netstation_debian_mirror }}
+          Suites: {{ netstation_dnsmasq_suite }}
+          Components: main
+          Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+        dest: /etc/apt/sources.list.d/netstation-dnsmasq.sources
+        owner: root
+        group: root
+        mode: "0644"
+      register: netstation_dnsmasq_source
+
+    - name: Only use it for explicitly requested versions
+      ansible.builtin.copy:
+        content: |
+          # Managed by Ansible (nickmous.netstation)
+          Package: *
+          Pin: release n={{ netstation_dnsmasq_suite }}
+          Pin-Priority: 1
+        dest: /etc/apt/preferences.d/netstation-dnsmasq
+        owner: root
+        group: root
+        mode: "0644"
+
+- name: Remove the extra dnsmasq package source
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/netstation-dnsmasq.sources
+    - /etc/apt/preferences.d/netstation-dnsmasq
+  when: netstation_dnsmasq_suite | length == 0
+
+- name: Release a dnsmasq hold when no version is pinned
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: install
+  loop:
+    - dnsmasq
+    - dnsmasq-base
+  when: netstation_dnsmasq_version | length == 0
+  # The packages may not be installed yet on a fresh server.
+  failed_when: false
+
+- name: Install dnsmasq
+  ansible.builtin.apt:
+    name: "{{ ['dnsmasq', 'dnsmasq-base'] if netstation_dnsmasq_version | length == 0
+             else ['dnsmasq=' ~ netstation_dnsmasq_version, 'dnsmasq-base=' ~ netstation_dnsmasq_version] }}"
+    state: "{{ 'latest' if netstation_dnsmasq_version | length == 0 else 'present' }}"
+    install_recommends: false
+    allow_downgrade: true
+    update_cache: "{{ netstation_dnsmasq_source | default({}) is changed }}"
+  notify: Restart dnsmasq
+
+- name: Hold the pinned dnsmasq version
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - dnsmasq
+    - dnsmasq-base
+  when: netstation_dnsmasq_version | length > 0
+
+- name: Write the dnsmasq configuration
+  ansible.builtin.template:
+    src: ltsp-dnsmasq.conf.j2
+    dest: /etc/dnsmasq.d/ltsp-dnsmasq.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart dnsmasq
+
+- name: Enable dnsmasq
+  ansible.builtin.systemd_service:
+    name: dnsmasq
+    enabled: true
+    state: started

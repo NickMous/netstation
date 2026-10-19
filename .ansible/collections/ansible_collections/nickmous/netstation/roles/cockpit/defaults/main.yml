@@ -1,0 +1,3 @@
+---
+# Extra Cockpit pages, e.g. cockpit-networkmanager or cockpit-storaged.
+netstation_cockpit_extra_packages: []

@@ -1,0 +1,37 @@
+---
+- name: Write the iPXE script that switches to HTTP
+  ansible.builtin.template:
+    src: netstation.ipxe.j2
+    dest: "{{ netstation_tftp_dir }}/ltsp/netstation.ipxe"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure nginx to serve the TFTP folder
+  ansible.builtin.template:
+    src: nginx-netstation.conf.j2
+    dest: /etc/nginx/sites-available/netstation
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable the netstation nginx site  # noqa: risky-file-permissions (a symlink has no mode)
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/netstation
+    dest: /etc/nginx/sites-enabled/netstation
+    state: "{{ 'link' if netstation_http_boot else 'absent' }}"
+  notify: Reload nginx
+
+- name: Disable other nginx sites
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/{{ item }}"
+    state: absent
+  loop: "{{ netstation_nginx_disable_sites }}"
+  notify: Reload nginx
+
+- name: Enable nginx
+  ansible.builtin.systemd_service:
+    name: nginx
+    enabled: "{{ netstation_http_boot }}"
+    state: "{{ 'started' if netstation_http_boot else 'stopped' }}"

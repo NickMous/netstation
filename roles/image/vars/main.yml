@@ -10,6 +10,7 @@ netstation_image_packages: >-
       + (['firefox-esr-l10n-' ~ netstation_firefox_language] if netstation_firefox_language | length > 0 else [])
       + (['xfce4-genmon-plugin'] if netstation_panel_show_address else [])
       + (['ethtool'] if netstation_wake_on_lan else [])
+      + (['xprintidle'] if netstation_idle_logout_minutes | int > 0 else [])
       + netstation_image_extra_packages) | unique }}
 
 # Files rendered into the image; dest is relative to the image root.
@@ -27,6 +28,11 @@ netstation_rootfs_templates:
   - dest: usr/local/bin/netstation-panel-address
     mode: "0755"
     when: "{{ netstation_panel_show_address }}"
+  - dest: etc/xdg/autostart/netstation-idle-logout.desktop
+    when: "{{ netstation_idle_logout_minutes | int > 0 }}"
+  - dest: usr/local/bin/netstation-idle-logout
+    mode: "0755"
+    when: "{{ netstation_idle_logout_minutes | int > 0 }}"
   - dest: usr/share/mime/packages/netstation-rdp.xml
   - dest: usr/share/applications/netstation-rdp.desktop
   - dest: usr/lib/firefox-esr/distribution/policies.json

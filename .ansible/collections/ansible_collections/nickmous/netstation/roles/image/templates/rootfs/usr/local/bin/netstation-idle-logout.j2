@@ -1,0 +1,29 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Logs the session out after {{ netstation_idle_logout_minutes | int }} minutes without keyboard or mouse input.
+# Shows a warning first; any input cancels it, also when the warning is hidden
+# behind a full-screen RDP window.
+limit={{ netstation_idle_logout_minutes | int * 60000 }}
+warning={{ netstation_idle_logout_warning_seconds | int }}
+
+idle() {
+    xprintidle 2>/dev/null || echo 0
+}
+
+while sleep 15; do
+    [ "$(idle)" -ge "$limit" ] || continue
+
+    zenity --warning --no-wrap --timeout="$warning" \
+        --text={{ netstation_idle_logout_message | quote }} &
+    dialog=$!
+    left=$warning
+    while [ "$left" -gt 0 ] && [ "$(idle)" -ge "$limit" ]; do
+        sleep 1
+        left=$((left - 1))
+    done
+    kill "$dialog" 2>/dev/null
+
+    if [ "$left" -eq 0 ]; then
+        exec xfce4-session-logout --logout --fast
+    fi
+done

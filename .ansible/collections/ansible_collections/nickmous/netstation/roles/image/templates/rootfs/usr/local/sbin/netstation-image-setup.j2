@@ -1,0 +1,61 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Runs inside the new image during `netstation-image build`.
+set -eu
+
+echo "==> Locale and time zone"
+echo {{ (netstation_locale ~ ' ' ~ (netstation_locale.split('.') | last if '.' in netstation_locale else 'UTF-8')) | quote }} >/etc/locale.gen
+locale-gen
+update-locale LANG={{ netstation_locale | quote }}
+ln -sf /usr/share/zoneinfo/{{ netstation_timezone | quote }} /etc/localtime
+echo {{ netstation_timezone | quote }} >/etc/timezone
+
+echo "==> .rdp file association"
+update-mime-database /usr/share/mime
+update-desktop-database -q /usr/share/applications
+{% if netstation_wallpaper | length > 0 %}
+
+echo "==> Wallpaper"
+# XFCE falls back to one of these two images on every monitor.
+wallpaper=/usr/share/backgrounds/netstation/{{ netstation_wallpaper_file | quote }}
+mkdir -p /usr/share/images/desktop-base /usr/share/backgrounds/xfce
+ln -sf "$wallpaper" /usr/share/images/desktop-base/default
+dpkg-divert --local --rename --add /usr/share/backgrounds/xfce/xfce-x.svg
+ln -sf "$wallpaper" /usr/share/backgrounds/xfce/xfce-x.svg
+{% endif %}
+
+echo "==> Initramfs"
+# LTSP needs overlayfs before the image is mounted.
+grep -qx overlay /etc/initramfs-tools/modules || echo overlay >>/etc/initramfs-tools/modules
+update-initramfs -u -k all
+
+echo "==> Services"
+systemctl enable ssh
+{% if netstation_wake_on_lan %}
+systemctl enable netstation-wol
+{% endif %}
+{% if netstation_veyon_enabled %}
+for key in /etc/netstation/veyon/*.pem; do
+    [ -e "$key" ] || continue
+    veyon-cli authkeys import "$(basename "$key" .pem)/public" "$key"
+done
+# 1 = key file authentication
+veyon-cli config set Authentication/Method 1
+systemctl enable veyon
+{% endif %}
+
+echo "==> Session user"
+# The session user comes from the server. A local copy would hide it.
+if id {{ netstation_session_user | quote }} >/dev/null 2>&1; then
+    userdel {{ netstation_session_user | quote }}
+fi
+
+echo "==> Release information"
+cat >/etc/netstation-release <<RELEASE
+NETSTATION_BUILD_ID=$(date -u +%Y%m%dT%H%MZ)
+NETSTATION_BUILD_DATE=$(date -u -Iseconds)
+DEBIAN_VERSION=$(cat /etc/debian_version)
+RELEASE
+
+apt-get clean
+rm -rf /var/lib/apt/lists/*

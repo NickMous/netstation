@@ -1,0 +1,51 @@
+---
+# Write the clients that are booted right now to a CSV file for Veyon Master,
+# with their name, IP and MAC address (the MAC enables Veyon's power-on).
+# Import it on your own machine with the commands this playbook prints.
+- name: Veyon computer list
+  hosts: netstation_servers
+  become: true
+  vars:
+    netstation_veyon_location: "{{ inventory_hostname }}"
+    netstation_veyon_csv: "{{ inventory_dir }}/../build/veyon-computers.csv"
+  tasks:
+    - name: Find the booted clients
+      ansible.builtin.command: /usr/local/sbin/netstation-image clients
+      register: netstation_booted
+      changed_when: false
+
+    - name: Name each client
+      vars:
+        netstation_names: >-
+          {{ dict((netstation_clients | default([]) | selectattr('hostname', 'defined')
+                   | map(attribute='mac') | map('lower') | list)
+                  | zip(netstation_clients | default([]) | selectattr('hostname', 'defined')
+                        | map(attribute='hostname') | list)) }}
+      ansible.builtin.set_fact:
+        netstation_veyon_rows: >-
+          {{ netstation_veyon_rows | default([])
+             + [[netstation_names[item.split()[1] | lower] | default('ltsp' ~ item.split()[0].split('.')[-1]),
+                 item.split()[0],
+                 item.split()[1] if item.split()[1] != 'unknown' else '']] }}
+      loop: "{{ netstation_booted.stdout_lines }}"
+
+    - name: Write the CSV file
+      ansible.builtin.copy:
+        content: |
+          {% for row in netstation_veyon_rows | default([]) %}
+          {{ row | join(';') }}
+          {% endfor %}
+        dest: "{{ netstation_veyon_csv }}"
+        mode: "0644"
+      delegate_to: localhost
+      become: false
+
+    - name: Show how to import it
+      ansible.builtin.debug:
+        msg:
+          - "{{ netstation_veyon_rows | default([]) | length }} clients written to {{ netstation_veyon_csv | realpath }}"
+          - "Import into Veyon Master on this machine (replaces its computer list):"
+          - "sudo veyon-cli networkobjects clear"
+          - >-
+            sudo veyon-cli networkobjects import {{ netstation_veyon_csv | realpath }}
+            location {{ netstation_veyon_location }} format "%name%;%host%;%mac%"

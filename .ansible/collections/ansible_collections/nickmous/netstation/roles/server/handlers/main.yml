@@ -1,0 +1,37 @@
+---
+- name: Restart dnsmasq
+  ansible.builtin.systemd_service:
+    name: dnsmasq
+    state: restarted
+
+- name: Reload nginx
+  ansible.builtin.systemd_service:
+    name: nginx
+    state: reloaded
+  when: netstation_http_boot
+
+- name: Apply sysctl settings
+  ansible.builtin.command: sysctl --system
+  changed_when: true
+
+- name: Restart NAT
+  ansible.builtin.systemd_service:
+    name: netstation-nat
+    state: restarted
+    daemon_reload: true
+  when: netstation_nat_enabled
+
+- name: Restart the NFS server
+  ansible.builtin.systemd_service:
+    name: nfs-server
+    state: restarted
+
+# ltsp.conf and the user list are packed into ltsp.img, which clients load at boot.
+- name: Regenerate the LTSP initrd
+  ansible.builtin.command: ltsp initrd
+  changed_when: true
+
+# The menu, default image and per-client boot settings live in ltsp.ipxe.
+- name: Regenerate the iPXE menu
+  ansible.builtin.command: ltsp --overwrite ipxe
+  changed_when: true

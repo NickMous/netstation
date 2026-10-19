@@ -1,0 +1,245 @@
+#!/bin/sh
+# netstation-image: build, promote and roll back the netstation client image.
+# Installed by the nickmous.netstation Ansible collection; settings come from
+# /etc/netstation/netstation.env and the build context it renders.
+set -eu
+
+# shellcheck source=/dev/null
+. /etc/netstation/netstation.env
+
+IMAGES_DIR=$NETSTATION_BASE_DIR/images
+CONTEXT_DIR=$NETSTATION_STATE_DIR/context
+BUILD_DIR=$NETSTATION_STATE_DIR/build
+PROD_IMG=$IMAGES_DIR/$NETSTATION_IMAGE.img
+STAGING_IMG=$IMAGES_DIR/$NETSTATION_STAGING_IMAGE.img
+
+die() {
+    echo "netstation-image: $*" >&2
+    exit 1
+}
+
+log() {
+    echo "==> $*"
+}
+
+usage() {
+    cat <<EOF
+Usage: netstation-image COMMAND
+
+Commands:
+  build              Build a fresh staging image from the current build context
+  promote            Make the staging image the production image
+  rollback [BUILD]   Restore a previous production image (default: the newest)
+  status             Show images, booted clients and services
+  clients            List booted clients as "IP MAC", one per line
+EOF
+}
+
+lock() {
+    exec 9>/run/netstation-image.lock
+    flock -n 9 || die "another netstation-image command is running"
+}
+
+# Print the build id stored inside an image file.
+build_id() {
+    unsquashfs -cat "$1" etc/netstation-release 2>/dev/null |
+        sed -n 's/^NETSTATION_BUILD_ID=//p' | head -n 1 | grep . || echo unknown
+}
+
+# Move an image file into the releases folder. Moving (not copying) keeps
+# the file open for clients that are still running it.
+archive() {
+    archive_id=$(build_id "$1")
+    archive_dest=$NETSTATION_RELEASES_DIR/$NETSTATION_IMAGE-$archive_id.img
+    if [ -e "$archive_dest" ] || [ "$archive_id" = unknown ]; then
+        archive_dest=$NETSTATION_RELEASES_DIR/$NETSTATION_IMAGE-$archive_id-$(date -u +%Y%m%dT%H%M%SZ).img
+    fi
+    mkdir -p "$NETSTATION_RELEASES_DIR"
+    mv "$1" "$archive_dest"
+    log "Archived production build $archive_id as $(basename "$archive_dest")"
+}
+
+# Remove archived copies of a build that is now in production, so it isn't
+# offered as a rollback target.
+drop_release() {
+    [ "$1" != unknown ] || return 0
+    for copy in "$NETSTATION_RELEASES_DIR/$NETSTATION_IMAGE-$1.img" \
+        "$NETSTATION_RELEASES_DIR/$NETSTATION_IMAGE-$1-"*.img; do
+        [ -f "$copy" ] || continue
+        rm -f -- "$copy"
+        log "Removed $(basename "$copy"), the same build as production"
+    done
+}
+
+# Newest first.
+list_releases() {
+    find "$NETSTATION_RELEASES_DIR" -maxdepth 1 -name "$NETSTATION_IMAGE-*.img" \
+        -printf '%T@ %p\n' 2>/dev/null | sort -rn | cut -d' ' -f2-
+}
+
+prune_releases() {
+    list_releases | tail -n +"$((NETSTATION_RELEASES_KEEP + 1))" | while read -r old; do
+        rm -f -- "$old"
+        log "Removed old release $(basename "$old")"
+    done
+}
+
+# Extract the production kernel and regenerate the boot menu.
+publish() {
+    ltsp kernel "$PROD_IMG"
+    ltsp --overwrite ipxe
+}
+
+cmd_build() {
+    [ -f "$CONTEXT_DIR/build.env" ] ||
+        die "no build context in $CONTEXT_DIR; run the image_build playbook first"
+    # shellcheck source=/dev/null
+    . "$CONTEXT_DIR/build.env"
+
+    recommends=false
+    [ "$NETSTATION_INSTALL_RECOMMENDS" = 1 ] && recommends=true
+    packages=$(grep -v '^#' "$CONTEXT_DIR/packages" | grep . | paste -sd, -)
+    target=$BUILD_DIR/$NETSTATION_STAGING_IMAGE
+
+    mkdir -p "$BUILD_DIR"
+    rm -rf "$target.new"
+    log "Building $NETSTATION_STAGING_IMAGE from scratch"
+    log "[1/4] Installing Debian $NETSTATION_SUITE and $(echo "$packages" | tr ',' '\n' | wc -l) packages (the longest step)"
+    # shellcheck disable=SC2016 # $1 is expanded by mmdebstrap's hook shell
+    mmdebstrap --mode=root --variant=minbase \
+        --aptopt="APT::Install-Recommends \"$recommends\"" \
+        --include="$packages" \
+        --customize-hook='echo "==> [2/4] Configuring the image"' \
+        --customize-hook="sync-in $CONTEXT_DIR/rootfs /" \
+        --customize-hook='chroot "$1" /usr/local/sbin/netstation-image-setup' \
+        "$NETSTATION_SUITE" "$target.new" "$CONTEXT_DIR/sources.list"
+    rm -rf "$target"
+    mv "$target.new" "$target"
+
+    log "[3/4] Packing the image"
+    ltsp image --backup=0 --mksquashfs-params="$NETSTATION_SQUASHFS_PARAMS" "$target"
+    log "[4/4] Updating the boot menu"
+    ltsp --overwrite ipxe
+    log "Staging build $(build_id "$STAGING_IMG") is ready. Test it, then run: netstation-image promote"
+}
+
+cmd_promote() {
+    [ -f "$STAGING_IMG" ] || die "there is no staging image; build one first"
+    new_id=$(build_id "$STAGING_IMG")
+    if [ -f "$PROD_IMG" ]; then
+        old_id=$(build_id "$PROD_IMG")
+        if [ "$new_id" != unknown ] && [ "$new_id" = "$old_id" ]; then
+            die "staging build $new_id is already in production"
+        fi
+        archive "$PROD_IMG"
+    fi
+    log "Promoting staging build $new_id to production"
+    cp --reflink=auto "$STAGING_IMG" "$PROD_IMG.tmp"
+    mv "$PROD_IMG.tmp" "$PROD_IMG"
+    drop_release "$new_id"
+    publish
+    prune_releases
+    log "Production is now build $new_id. Clients pick it up on their next boot."
+}
+
+cmd_rollback() {
+    if [ $# -gt 0 ]; then
+        target=$NETSTATION_RELEASES_DIR/$NETSTATION_IMAGE-${1#"$NETSTATION_IMAGE"-}
+        target=${target%.img}.img
+    else
+        target=$(list_releases | head -n 1)
+    fi
+    [ -n "$target" ] && [ -f "$target" ] ||
+        die "release not found; see the list in: netstation-image status"
+    rollback_id=$(build_id "$target")
+    if [ -f "$PROD_IMG" ]; then
+        archive "$PROD_IMG"
+    fi
+    mv "$target" "$PROD_IMG"
+    drop_release "$rollback_id"
+    publish
+    log "Production is now build $rollback_id. Clients pick it up on their next boot."
+}
+
+# Clients booted from this server: they keep the image open over NFS.
+cmd_clients() {
+    ss -Htn state established '( sport = :2049 )' | awk '{print $4}' |
+        sed 's/^\[::ffff://; s/\]\{0,1\}:[0-9]*$//' | sort -uV |
+        while read -r ip; do
+            mac=$(ip neigh show "$ip" | awk '{ for (i = 1; i < NF; i++) if ($i == "lladdr") print $(i + 1) }')
+            echo "$ip ${mac:-unknown}"
+        done
+}
+
+describe() {
+    if [ -f "$1" ]; then
+        echo "build $(build_id "$1"), $(du -h "$1" | cut -f1)"
+    else
+        echo "none"
+    fi
+}
+
+cmd_status() {
+    echo "Images"
+    printf '  %-12s %s\n' production "$(describe "$PROD_IMG")"
+    printf '  %-12s %s\n' staging "$(describe "$STAGING_IMG")"
+    echo
+    echo "Previous production builds (rollback targets, newest first)"
+    releases=$(list_releases)
+    if [ -n "$releases" ]; then
+        echo "$releases" | while read -r img; do
+            printf '  %s\n' "$(build_id "$img")"
+        done
+    else
+        echo "  none"
+    fi
+    echo
+    echo "Scheduled staging build"
+    printf '  timer: %s, next: %s\n' \
+        "$(systemctl is-enabled netstation-staging-build.timer 2>/dev/null || true)" \
+        "$(systemctl show -P NextElapseUSecRealtime netstation-staging-build.timer 2>/dev/null || true)"
+    if [ -n "$(systemctl show -P ExecMainStartTimestamp netstation-staging-build.service 2>/dev/null)" ]; then
+        last_run=$(systemctl show -P Result netstation-staging-build.service)
+    else
+        last_run=never
+    fi
+    printf '  last run: %s\n' "$last_run"
+    echo
+    echo "Clients booted from this server"
+    clients=$(cmd_clients)
+    if [ -n "$clients" ]; then
+        echo "$clients" | sed 's/^/  /'
+    else
+        echo "  none"
+    fi
+    echo
+    echo "Services"
+    for service in dnsmasq nfs-server nginx; do
+        printf '  %-12s %s\n' "$service" "$(systemctl is-active "$service" 2>/dev/null || true)"
+    done
+}
+
+[ "$(id -u)" = 0 ] || die "run as root (sudo netstation-image ...)"
+command=${1:-}
+if [ $# -gt 0 ]; then shift; fi
+case "$command" in
+build)
+    lock
+    cmd_build
+    ;;
+promote)
+    lock
+    cmd_promote
+    ;;
+rollback)
+    lock
+    cmd_rollback "$@"
+    ;;
+status) cmd_status ;;
+clients) cmd_clients ;;
+-h | --help | help) usage ;;
+*)
+    usage >&2
+    exit 1
+    ;;
+esac

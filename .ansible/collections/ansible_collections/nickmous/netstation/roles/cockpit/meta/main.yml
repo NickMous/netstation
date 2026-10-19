@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: NickMous
+  description: Cockpit web console for a netstation server
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+dependencies: []

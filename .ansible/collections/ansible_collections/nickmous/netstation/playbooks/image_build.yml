@@ -1,0 +1,39 @@
+---
+# Build a fresh staging image from the current inventory settings.
+# Test it on a test client, then run image_promote.
+- name: Build a staging image
+  hosts: netstation_servers
+  become: true
+  tasks:
+    - name: Prepare the build
+      ansible.builtin.include_role:
+        name: nickmous.netstation.image
+
+    - name: Show how to follow the build
+      ansible.builtin.debug:
+        msg: "Follow the build live on the server with: sudo journalctl -fu netstation-staging-build"
+
+    # The same service as the scheduled build, so its output goes to the
+    # journal while it runs. If a build is already running, this waits for it.
+    - name: Build the image (this takes a while)
+      block:
+        - name: Run the build
+          ansible.builtin.systemd_service:
+            name: netstation-staging-build.service
+            state: started
+          async: 7200
+          poll: 15
+      always:
+        - name: Collect the build output
+          ansible.builtin.shell: >-
+            journalctl --no-pager -o cat -u netstation-staging-build
+            _SYSTEMD_INVOCATION_ID="$(systemctl show -P InvocationID netstation-staging-build)"
+          register: netstation_build_log
+          changed_when: false
+
+        - name: Show the result
+          ansible.builtin.debug:
+            msg: >-
+              {{ (netstation_build_log.stdout_lines | select('match', '^==> ') | list)
+                 if (netstation_build_log.stdout_lines | select('match', '^==> .*ready') | list)
+                 else netstation_build_log.stdout_lines[-25:] }}

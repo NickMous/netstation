@@ -1,0 +1,107 @@
+---
+- name: Check the DHCP settings
+  ansible.builtin.assert:
+    that:
+      - netstation_dhcp_mode in ['proxy', 'full']
+      - >-
+        netstation_dhcp_mode != 'full' or
+        (netstation_dhcp_range_start | length > 0 and netstation_dhcp_range_end | length > 0
+         and netstation_dhcp_dns_servers | length > 0)
+    fail_msg: >-
+      netstation_dhcp_mode must be 'proxy' or 'full'; 'full' also needs
+      netstation_dhcp_range_start, netstation_dhcp_range_end and
+      netstation_dhcp_dns_servers.
+
+- name: Install the LTSP server packages
+  ansible.builtin.apt:
+    name:
+      - ltsp
+      - ipxe
+      - nfs-kernel-server
+      - openssh-server
+      - squashfs-tools
+      - nginx
+      - wakeonlan
+    state: present
+    install_recommends: false
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install dnsmasq
+  ansible.builtin.import_tasks: dnsmasq.yml
+
+- name: Boot into a text console
+  when: netstation_server_headless
+  block:
+    - name: Read the default boot target
+      ansible.builtin.command: systemctl get-default
+      register: netstation_default_target
+      changed_when: false
+      check_mode: false
+
+    - name: Set the default boot target to multi-user
+      ansible.builtin.command: systemctl set-default multi-user.target
+      when: netstation_default_target.stdout != 'multi-user.target'
+      changed_when: true
+
+- name: Create the netstation directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "{{ netstation_state_dir }}", mode: "0755" }
+    - { path: "{{ netstation_releases_dir }}", mode: "0700" }
+    - { path: /etc/ltsp, mode: "0755" }
+    - { path: /etc/netstation, mode: "0755" }
+    - { path: "{{ netstation_tftp_dir }}/ltsp", mode: "0755" }
+
+- name: Create the session user
+  ansible.builtin.user:
+    name: "{{ netstation_session_user }}"
+    comment: netstation session user
+    shell: /bin/bash
+    create_home: false
+    password_lock: true
+  notify: Regenerate the LTSP initrd
+
+- name: Write ltsp.conf
+  ansible.builtin.template:
+    src: ltsp.conf.j2
+    dest: /etc/ltsp/ltsp.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Regenerate the LTSP initrd
+    - Regenerate the iPXE menu
+
+- name: Export the images over NFS
+  ansible.builtin.command: ltsp nfs
+  args:
+    creates: /etc/exports.d/ltsp-nfs.exports
+  notify: Restart the NFS server
+
+- name: Enable the NFS server
+  ansible.builtin.systemd_service:
+    name: nfs-server
+    enabled: true
+    state: started
+
+- name: Install the iPXE binaries and menu
+  ansible.builtin.command: ltsp --overwrite ipxe
+  args:
+    creates: "{{ netstation_tftp_dir }}/ltsp/ltsp.ipxe"
+
+- name: Serve the boot files over HTTP
+  ansible.builtin.import_tasks: http_boot.yml
+
+- name: Share the internet connection with the clients
+  ansible.builtin.import_tasks: nat.yml
+
+- name: Generate the LTSP initrd for the first time
+  ansible.builtin.command: ltsp initrd
+  args:
+    creates: "{{ netstation_tftp_dir }}/ltsp/ltsp.img"

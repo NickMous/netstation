@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# LTSP adds autologin-user from AUTOLOGIN in ltsp.conf at boot.
+[Seat:*]
+user-session=xfce
+autologin-session=xfce
+# A fresh home folder before every session and after every logout.
+session-setup-script=/usr/local/sbin/netstation-reset-home
+session-cleanup-script=/usr/local/sbin/netstation-reset-home
+{% if netstation_numlock %}
+greeter-setup-script=/usr/bin/numlockx on
+{% endif %}

@@ -1,0 +1,39 @@
+{
+ "collection_info": {
+  "namespace": "nickmous",
+  "name": "netstation",
+  "version": "0.1.0",
+  "authors": [
+   "NickMous"
+  ],
+  "readme": "README.md",
+  "tags": [
+   "linux",
+   "infrastructure",
+   "ltsp",
+   "thinclient",
+   "netboot",
+   "pxe",
+   "rdp",
+   "debian"
+  ],
+  "description": "Reproducible LTSP setup for stateless, network-booted RDP thin clients on Debian: server, client image builds, staging/production rollout.",
+  "license": [
+   "MIT"
+  ],
+  "license_file": null,
+  "dependencies": {},
+  "repository": "https://github.com/NickMous/netstation",
+  "documentation": null,
+  "homepage": null,
+  "issues": "https://github.com/NickMous/netstation/issues"
+ },
+ "file_manifest_file": {
+  "name": "FILES.json",
+  "ftype": "file",
+  "chksum_type": "sha256",
+  "chksum_sha256": "2fc4c803a1f400eeed7b66cee15a7f077a54e82594ee049d059d8fe5566a9acb",
+  "format": 1
+ },
+ "format": 1
+}

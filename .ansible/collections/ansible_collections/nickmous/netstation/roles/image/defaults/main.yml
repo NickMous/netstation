@@ -1,0 +1,125 @@
+---
+# --- What the clients run ---------------------------------------------------
+
+# The page the browser opens on login.
+netstation_homepage: about:blank
+
+# Image file on the Ansible controller to use as the desktop background.
+# Empty keeps the Debian default.
+netstation_wallpaper: ""
+
+netstation_numlock: true
+
+# Keep Wake-on-LAN armed on the clients' network cards. The BIOS/UEFI of each
+# client must allow it too. Wake clients with the wake playbook.
+netstation_wake_on_lan: true
+
+# Show the client's name and IP address in the panel, next to the clock.
+netstation_panel_show_address: true
+
+# Log the session out after this many minutes without keyboard or mouse
+# input, so the next person gets a fresh desktop. 0 turns it off. An RDP
+# session only disconnects and can be resumed.
+netstation_idle_logout_minutes: 0
+# The warning shown before logging out; any input cancels it.
+netstation_idle_logout_warning_seconds: 60
+netstation_idle_logout_message: >-
+  You will be logged out in {{ netstation_idle_logout_warning_seconds }}
+  seconds. Move the mouse or press a key to stay logged in.
+
+# Extra options for xfreerdp3, after the .rdp file and the password.
+netstation_rdp_options:
+  - /cert:tofu
+
+# Firefox's own language, e.g. "nl" or "de" (installs firefox-esr-l10n-<language>).
+# Empty keeps English. The rest of the desktop follows netstation_locale.
+netstation_firefox_language: ""
+
+# Firefox enterprise policies merged over the defaults
+# (https://mozilla.github.io/policy-templates/).
+netstation_firefox_policies: {}
+
+# --- Packages ---------------------------------------------------------------
+
+netstation_image_components:
+  - main
+  - contrib
+  - non-free-firmware
+
+# Recommended packages are left out to keep the image small; everything the
+# clients need is listed explicitly below.
+netstation_image_install_recommends: false
+
+netstation_image_packages_system:
+  - linux-image-amd64
+  - initramfs-tools
+  - systemd-sysv
+  - udev
+  - dbus
+  - kmod
+  - iproute2
+  - ltsp
+  - nfs-common
+  - sshfs
+  - openssh-server
+  - sudo
+  - locales
+  - tzdata
+  - keyboard-configuration
+  - console-setup
+  - ca-certificates
+
+netstation_image_packages_firmware:
+  - firmware-linux-free
+  - firmware-misc-nonfree
+  - firmware-intel-graphics
+  - firmware-amd-graphics
+  - firmware-realtek
+
+netstation_image_packages_desktop:
+  - xserver-xorg-core
+  - xserver-xorg-input-libinput
+  - lightdm
+  - lightdm-gtk-greeter
+  - xfce4-session
+  - xfwm4
+  - xfdesktop4
+  - xfce4-panel
+  - xfce4-settings
+  - xfce4-terminal
+  - thunar
+  - dbus-user-session
+  # Lets the user at the client shut down and restart it from the desktop.
+  - polkitd
+  - adwaita-icon-theme
+  - fonts-dejavu-core
+  - desktop-base
+  - pipewire-audio
+  - numlockx
+  - xdg-utils
+  - shared-mime-info
+  - desktop-file-utils
+
+netstation_image_packages_apps:
+  - firefox-esr
+  - freerdp3-x11
+  - zenity
+
+netstation_image_packages_veyon:
+  - veyon-service
+
+# Site-specific additions.
+netstation_image_extra_packages: []
+
+# Folder on the Ansible controller copied over the image root last, e.g.
+# files/rootfs/etc/foo.conf ends up as /etc/foo.conf on every client.
+netstation_image_files_dir: ""
+
+# --- Build ------------------------------------------------------------------
+
+netstation_squashfs_params: "-comp zstd"
+
+# Build a fresh staging image on a schedule (systemd OnCalendar syntax).
+# Promoting it to production stays a manual step.
+netstation_staging_build_enabled: true
+netstation_staging_build_schedule: "Sun *-*-* 03:00:00"

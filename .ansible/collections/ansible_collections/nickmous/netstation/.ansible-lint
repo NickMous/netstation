@@ -1,0 +1,8 @@
+---
+profile: production
+skip_list:
+  # All variables share the collection-wide netstation_ prefix, so users can
+  # set them once in group_vars without knowing which role reads them.
+  - var-naming[no-role-prefix]
+exclude_paths:
+  - examples/collections/

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 (2026-10-19)
 
 - The clients keep their clocks in sync (systemd-timesyncd);
   `netstation_ntp_servers` picks the time servers.

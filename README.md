@@ -21,6 +21,8 @@ every logout starts clean. All maintenance happens in one place, on the server.
   Veyon on the clients.
 - **Secure defaults.** A firewall that only lets in what netstation needs, and
   automatic security updates on the server.
+- **Power schedule.** Wake the clients in the morning; they switch themselves
+  off when nobody uses them.
 - **Alerts.** Optional Pushover alerts for failed builds and services, a
   hanging dnsmasq, a full disk, failed security updates and pending reboots.
 
@@ -108,11 +110,12 @@ network hands out the IP addresses.
 Every variable is documented, with its default, in `roles/*/defaults/main.yml`:
 
 - `roles/common/defaults/main.yml`: image names, session user, Debian release,
-  locale, Veyon
+  locale, Veyon, power schedule
 - `roles/server/defaults/main.yml`: DHCP mode, NAT for two-network-card
   setups, known clients and test clients, extra `ltsp.conf` settings
-- `roles/image/defaults/main.yml`: homepage, wallpaper, RDP options, Firefox
-  policies, packages, extra files, scheduled builds
+- `roles/image/defaults/main.yml`: homepage, wallpaper, desktop shortcuts,
+  idle logout, RDP options and pass-through, time servers, Firefox policies,
+  packages, extra files, scheduled builds
 - `roles/installer/defaults/main.yml`: admin account, network settings and
   extra network cards for the installed server
 - `roles/alerts/defaults/main.yml`: Pushover keys and what to alert on

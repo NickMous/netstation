@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- The clients keep their clocks in sync (systemd-timesyncd);
+  `netstation_ntp_servers` picks the time servers.
+- A dnsmasq watchdog restarts a hanging dnsmasq and reports it
+  (`netstation_dnsmasq_watchdog`).
+- Desktop shortcuts that open a web page (`netstation_desktop_shortcuts`).
+- RDP pass-through for sound, USB sticks and printers (`netstation_rdp_sound`,
+  `netstation_rdp_usb_drives`, `netstation_rdp_printers`).
+- A power schedule (`netstation_power_wake`, `netstation_power_off`,
+  `netstation_power_report`).
+- Clients check in with the server every 2 minutes, so `netstation-image
+  clients`, status and the Veyon list also see idle clients.
+- The idle logout leaves sessions alone that nobody has used.
+
 ## 0.3.0 (2026-10-19)
 
 - A firewall on the server (`netstation_firewall_enabled`, on by default):

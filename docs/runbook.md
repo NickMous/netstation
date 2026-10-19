@@ -45,7 +45,7 @@ haven't set up a vault password file.
 
 | What | Where | Then run |
 |---|---|---|
-| Homepage, wallpaper, RDP options, packages, Firefox | `group_vars` (`netstation_homepage`, ...) | `image_build`, test, `image_promote` |
+| Homepage, wallpaper, desktop shortcuts, RDP options and pass-through, idle logout, packages, Firefox | `group_vars` (`netstation_homepage`, ...) | `image_build`, test, `image_promote` |
 | Files in the image | `files/rootfs/...` | `image_build`, test, `image_promote` |
 | Known clients, test client, per-client settings | `netstation_clients` | `server` |
 | DHCP, firewall, WireGuard peers, other server settings | `group_vars` | `server` |
@@ -110,6 +110,32 @@ management). The image keeps the network card armed when the client shuts
 down. If clients don't wake, set `netstation_wake_broadcast` to the
 broadcast address of their network (e.g. `192.168.1.255`).
 
+## Power schedule
+
+With a power schedule the server wakes the clients and the clients switch
+themselves off when nobody uses them:
+
+```yaml
+netstation_power_wake: ["08:45"]          # Wake-on-LAN for all known clients
+netstation_power_off:
+  - at: "10:00"                           # not used since switched on
+  - at: "18:30"
+    idle_minutes: 15                      # no input for 15 minutes
+netstation_power_report: ["22:00"]        # Pushover: clients still on
+```
+
+Times are systemd calendar times, so `"Mon..Fri 08:45"` works too. The wake
+reaches the clients in `netstation_clients` and every client the server has
+seen before (`/var/lib/netstation/known-clients`). Switching off is part of
+the image, so after changing `netstation_power_off` run `image_build`, test,
+and `image_promote`; the other two only need `server`.
+
+Try it by hand on the server:
+
+```bash
+sudo netstation-power wake      # or: learn, report
+```
+
 ## Veyon computer list
 
 Veyon Master needs a list of the clients. Generate it from the clients that
@@ -156,9 +182,11 @@ sudo journalctl -u dnsmasq -f
   log. In proxy mode, also check that the other DHCP server doesn't set
   options 60, 66 or 67.
 - **dnsmasq hangs (high CPU, clients stop booting):** some dnsmasq versions
-  hang in proxy mode. Check with `sudo netstation-dnsmasq-check` after a
-  client has booted; it measures CPU use, unread packets and whether TFTP
-  still answers. Pin a working version with `netstation_dnsmasq_version`.
+  hang in proxy mode. A watchdog checks every 2 minutes and restarts it (see
+  `sudo journalctl -u netstation-dnsmasq-watchdog`). Check by hand with
+  `sudo netstation-dnsmasq-check` after a client has booted; it measures CPU
+  use, unread packets and whether TFTP still answers. If it keeps happening,
+  pin a working version with `netstation_dnsmasq_version`.
 
 ### A client boots but stops with an error
 

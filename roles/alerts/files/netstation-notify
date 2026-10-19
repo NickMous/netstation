@@ -1,0 +1,28 @@
+#!/bin/sh
+# Sends an alert with Pushover and writes it to the journal.
+# Usage: netstation-notify TITLE [MESSAGE]    (MESSAGE from stdin if left out)
+#        netstation-notify --failed UNIT      (the unit's last log lines)
+set -eu
+
+# shellcheck source=/dev/null
+. /etc/netstation/alerts.env
+
+if [ "${1:-}" = --failed ]; then
+    unit=${2:?unit name missing}
+    title="$unit failed"
+    message=$(journalctl -u "$unit" -n 15 -o cat --no-pager 2>&1)
+else
+    title=${1:?title missing}
+    if [ $# -ge 2 ]; then message=$2; else message=$(cat); fi
+fi
+title="$NETSTATION_ALERTS_NAME: $title"
+# Pushover allows 1024 characters.
+message=$(printf '%s' "${message:-(no details)}" | tail -c 1000)
+
+logger -t netstation-alert -- "$title: $message"
+# The keys go in through stdin, so they don't show up in the process list.
+printf 'form-string = "token=%s"\nform-string = "user=%s"\n' \
+    "$PUSHOVER_APP_TOKEN" "$PUSHOVER_USER_KEY" |
+    curl -fsS --max-time 30 --retry 3 --config - \
+        --form-string "title=$title" --form-string "message=$message" \
+        https://api.pushover.net/1/messages.json >/dev/null

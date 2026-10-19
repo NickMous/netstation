@@ -19,6 +19,8 @@ every logout starts clean. All maintenance happens in one place, on the server.
   updates; promoting it stays a manual decision.
 - **Remote management.** Optional WireGuard VPN, Cockpit web console, SSH and
   Veyon on the clients.
+- **Alerts.** Optional Pushover alerts for failed builds and services, a
+  hanging dnsmasq, a full disk, failed security updates and pending reboots.
 
 ## How it fits together
 
@@ -32,7 +34,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 | Playbook | What it does |
 |---|---|
 | `nickmous.netstation.installer_iso` | Build an unattended Debian installer ISO for the server |
-| `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, WireGuard, Cockpit) |
+| `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, security updates, alerts, WireGuard, Cockpit) |
 | `nickmous.netstation.image_build` | Build a new staging image from scratch |
 | `nickmous.netstation.image_diff` | Show what changed between production and staging |
 | `nickmous.netstation.image_promote` | Make the staging image the production image |
@@ -111,6 +113,7 @@ Every variable is documented, with its default, in `roles/*/defaults/main.yml`:
   policies, packages, extra files, scheduled builds
 - `roles/installer/defaults/main.yml`: admin account, network settings and
   extra network cards for the installed server
+- `roles/alerts/defaults/main.yml`: Pushover keys and what to alert on
 - `roles/wireguard/defaults/main.yml` and `roles/cockpit/defaults/main.yml`
 
 All variables share the `netstation_` prefix, so you can set them in one

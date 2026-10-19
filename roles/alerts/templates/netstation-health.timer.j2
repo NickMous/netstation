@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Check the netstation server every {{ netstation_alerts_check_interval }}
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec={{ netstation_alerts_check_interval }}
+
+[Install]
+WantedBy=timers.target

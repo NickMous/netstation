@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+[Unit]
+OnFailure=netstation-alert@%n.service
+{% if item == 'netstation-staging-build.service' and netstation_alerts_staging_ready %}
+
+[Service]
+# Only runs when the build succeeded.
+ExecStartPost=/bin/sh -c '/usr/local/sbin/netstation-image diff --summary | /usr/local/sbin/netstation-notify "Staging build ready to test"'
+{% endif %}

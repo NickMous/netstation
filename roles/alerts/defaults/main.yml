@@ -1,0 +1,27 @@
+---
+# Alerts on your phone with Pushover (https://pushover.net). Create an
+# application there for the API token; your user key is on your Pushover
+# dashboard. Keep both in your vault. Alerts are on when both are set.
+netstation_pushover_app_token: ""
+netstation_pushover_user_key: ""
+netstation_alerts_enabled: >-
+  {{ netstation_pushover_app_token | length > 0
+     and netstation_pushover_user_key | length > 0 }}
+
+# Shown at the start of every alert's title.
+netstation_alerts_name: "{{ inventory_hostname }}"
+
+# Services that alert when they fail or stop.
+netstation_alerts_services:
+  - dnsmasq
+  - nfs-server
+  - nginx
+
+# How often the health check runs: services, dnsmasq hang, disk space,
+# security updates and pending reboots.
+netstation_alerts_check_interval: 10min
+# Alert when a disk is fuller than this, in percent.
+netstation_alerts_disk_percent: 85
+
+# Alert when a staging build is ready, with what changed compared with production.
+netstation_alerts_staging_ready: true

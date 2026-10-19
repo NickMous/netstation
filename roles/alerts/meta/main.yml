@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  author: NickMous
+  description: Pushover alerts from a netstation server
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+dependencies:
+  - role: nickmous.netstation.common

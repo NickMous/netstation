@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Check the netstation server and send alerts
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/netstation-health

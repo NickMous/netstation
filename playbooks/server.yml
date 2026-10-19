@@ -22,3 +22,7 @@
       ansible.builtin.include_role:
         name: nickmous.netstation.cockpit
       when: netstation_cockpit_enabled | default(true)
+
+    - name: Pushover alerts
+      ansible.builtin.include_role:
+        name: nickmous.netstation.alerts

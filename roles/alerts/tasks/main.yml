@@ -1,0 +1,93 @@
+---
+- name: Set the units that alert when they fail
+  ansible.builtin.set_fact:
+    netstation_alerts_units: >-
+      {{ netstation_alerts_services | map('regex_replace', '^(?!.*\.service$)(.*)$', '\1.service') | list
+         + ['netstation-staging-build.service'] }}
+
+- name: Set up the alerts
+  when: netstation_alerts_enabled | bool
+  block:
+    - name: Install curl
+      ansible.builtin.apt:
+        name: curl
+        state: present
+        install_recommends: false
+
+    - name: Write the alert settings
+      ansible.builtin.template:
+        src: alerts.env.j2
+        dest: /etc/netstation/alerts.env
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Install the alert scripts
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "/usr/local/sbin/{{ item }}"
+        owner: root
+        group: root
+        mode: "0755"
+      loop:
+        - netstation-notify
+        - netstation-health
+
+    - name: Install the alert units
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - netstation-alert@.service
+        - netstation-health.service
+        - netstation-health.timer
+      notify: Reload systemd
+
+    - name: Create the drop-in folders
+      ansible.builtin.file:
+        path: "/etc/systemd/system/{{ item }}.d"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ netstation_alerts_units }}"
+
+    - name: Alert when these units fail
+      ansible.builtin.template:
+        src: on-failure.conf.j2
+        dest: "/etc/systemd/system/{{ item }}.d/netstation-alert.conf"
+        owner: root
+        group: root
+        mode: "0644"
+      loop: "{{ netstation_alerts_units }}"
+      notify: Reload systemd
+
+    - name: Reload systemd before starting the timer
+      ansible.builtin.meta: flush_handlers
+
+    - name: Start the health check
+      ansible.builtin.systemd_service:
+        name: netstation-health.timer
+        enabled: true
+        state: started
+
+- name: Turn the alerts off
+  when: not netstation_alerts_enabled | bool
+  block:
+    - name: Stop the health check
+      ansible.builtin.systemd_service:
+        name: netstation-health.timer
+        enabled: false
+        state: stopped
+      failed_when: false
+
+    - name: Remove the alert drop-ins and settings
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ netstation_alerts_units | map('regex_replace', '^(.*)$', '/etc/systemd/system/\\1.d/netstation-alert.conf') | list
+                + ['/etc/netstation/alerts.env'] }}"
+      notify: Reload systemd

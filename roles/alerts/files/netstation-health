@@ -1,0 +1,62 @@
+#!/bin/sh
+# Checks the server and alerts when a problem appears and when it's resolved,
+# not on every run. Started by netstation-health.timer.
+set -u
+
+# shellcheck source=/dev/null
+. /etc/netstation/alerts.env
+
+state=/var/lib/netstation/alert-problems
+mkdir -p "${state%/*}"
+touch "$state"
+now=$(mktemp)
+trap 'rm -f "$now"' EXIT
+
+# problem KEY MESSAGE
+problem() {
+    printf '%s\t%s\n' "$1" "$2" >>"$now"
+}
+
+for service in $NETSTATION_ALERTS_SERVICES; do
+    active=$(systemctl is-active "$service" 2>/dev/null) || true
+    [ "$active" = active ] || problem "service-$service" "$service is ${active:-unknown}."
+done
+
+if [ "$(systemctl is-active dnsmasq)" = active ] &&
+    ! netstation-dnsmasq-check 5 >/dev/null 2>&1; then
+    problem dnsmasq-hang "dnsmasq hangs, so clients can't network-boot. Restart it: sudo systemctl restart dnsmasq"
+fi
+
+df -P / "$NETSTATION_BASE_DIR" | awk 'NR > 1 { sub(/%/, "", $5); print $5, $6 }' | sort -u |
+    while read -r used mount; do
+        [ "$used" -lt "$NETSTATION_ALERTS_DISK_PERCENT" ] ||
+            problem "disk-$mount" "The disk at $mount is $used% full."
+    done
+
+# The last unattended-upgrades run, from its log.
+log=/var/log/unattended-upgrades/unattended-upgrades.log
+if [ -f "$log" ]; then
+    error=$(awk '/Starting unattended upgrades script/ { run = "" } { run = run $0 "\n" }
+                 END { printf "%s", run }' "$log" | grep ' ERROR ' | tail -n 1)
+    [ -z "$error" ] || problem updates-failed "The automatic security updates failed: ${error#* ERROR }"
+fi
+
+newest_kernel=$(find /boot -maxdepth 1 -name 'vmlinuz-*' | sed 's|^/boot/vmlinuz-||' | sort -V | tail -n 1)
+if [ -n "$newest_kernel" ] && [ "$newest_kernel" != "$(uname -r)" ]; then
+    problem reboot "Security updates need a reboot of the server (kernel $newest_kernel). Clients stop working while it restarts, so do it outside opening hours."
+fi
+
+sort -o "$now" "$now"
+sent=yes
+while IFS="$(printf '\t')" read -r key message; do
+    grep -q "^$key	" "$state" && continue
+    netstation-notify "Problem" "$message" || sent=no
+done <"$now"
+while IFS="$(printf '\t')" read -r key message; do
+    grep -q "^$key	" "$now" && continue
+    netstation-notify "Resolved" "Was: $message" || sent=no
+done <"$state"
+
+# Keep the old state when an alert couldn't be sent, so the next run tries again.
+[ "$sent" = yes ] && cp "$now" "$state"
+exit 0

@@ -69,6 +69,33 @@ booted right now, and whether dnsmasq, NFS and nginx are running.
 Cockpit is at `https://<server>:9090` (log in with your server account): logs,
 services, updates and a terminal.
 
+## Alerts
+
+With `netstation_pushover_app_token` and `netstation_pushover_user_key` set,
+the server sends Pushover alerts:
+
+| Alert | When |
+|---|---|
+| *unit* failed | The scheduled build, dnsmasq, NFS or nginx failed, with its last log lines |
+| Problem / Resolved | Every 10 minutes the server checks: a service stopped, dnsmasq hangs, a disk over 85% full, the automatic security updates failed, or the server needs a reboot for a new kernel. It alerts once when a problem appears and once when it's gone. |
+| Staging build ready to test | A staging build finished, with what changed compared with production |
+
+Security updates install by themselves, but the server never reboots by
+itself: clients stop working while it restarts. Reboot it outside opening
+hours when the reboot alert comes:
+
+```bash
+ssh <server> sudo systemctl reboot
+```
+
+To see the alerts the server sent, also when Pushover couldn't be reached:
+
+```bash
+sudo journalctl -t netstation-alert
+```
+
+Run a check by hand with `sudo netstation-health`.
+
 ## Waking clients
 
 Clients listed in `netstation_clients` can be switched on from the server:

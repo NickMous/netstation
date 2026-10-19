@@ -2,6 +2,7 @@
 # {{ ansible_managed }}
 # LightDM session setup/cleanup script: gives the session user a fresh home
 # folder from /etc/skel. It must never block a login, so it always exits 0.
+# As the cleanup script it gets --restart-lightdm.
 user={{ netstation_session_user | quote }}
 
 # Only on clients, where the user is merged in from the server.
@@ -15,4 +16,13 @@ rm -rf "$home"
 cp -a /etc/skel "$home"
 chown -R "$user:" "$home"
 chmod 0700 "$home"
+
+# After a logout LightDM shows the login screen instead of logging in again.
+# Restarting it brings the automatic login back, but not while LightDM is
+# stopping or the client shuts down.
+if [ "${1:-}" = --restart-lightdm ] &&
+    [ "$(systemctl is-system-running)" != stopping ] &&
+    [ "$(systemctl show -p ActiveState --value lightdm)" = active ]; then
+    systemctl --no-block restart lightdm
+fi
 exit 0

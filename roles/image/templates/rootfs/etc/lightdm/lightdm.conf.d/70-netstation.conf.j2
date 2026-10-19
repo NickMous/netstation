@@ -3,9 +3,10 @@
 [Seat:*]
 user-session=xfce
 autologin-session=xfce
-# A fresh home folder before every session and after every logout.
+# A fresh home folder before every session and after every logout, then
+# automatic login again.
 session-setup-script=/usr/local/sbin/netstation-reset-home
-session-cleanup-script=/usr/local/sbin/netstation-reset-home
+session-cleanup-script=/usr/local/sbin/netstation-reset-home --restart-lightdm
 {% if netstation_numlock %}
 greeter-setup-script=/usr/bin/numlockx on
 {% endif %}

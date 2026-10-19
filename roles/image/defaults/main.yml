@@ -17,6 +17,12 @@ netstation_wake_on_lan: true
 # Show the client's name and IP address in the panel, next to the clock.
 netstation_panel_show_address: true
 
+# Shortcuts on the desktop that open a web page in Firefox:
+#   - name: HD Cloud
+#     url: https://www.hdcloud.nl/
+#     icon: firefox-esr        # optional: an icon name or an icon file path
+netstation_desktop_shortcuts: []
+
 # Log the session out after this many minutes without keyboard or mouse
 # input, so the next person gets a fresh desktop. 0 turns it off. An RDP
 # session only disconnects and can be resumed.

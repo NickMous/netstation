@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name={{ item.name }}
+Exec=firefox-esr "{{ item.url | replace('\\', '\\\\') | replace('"', '\\"') | replace('`', '\\`') | replace('$', '\\$') | replace('%', '%%') }}"
+Icon={{ item.icon | default('firefox-esr') }}

@@ -56,6 +56,29 @@
     label: "{{ item.dest }}"
   when: item.when | default(true) | bool
 
+- name: Add the desktop shortcuts
+  when: netstation_desktop_shortcuts | length > 0
+  block:
+    - name: Create the desktop folder for new sessions
+      ansible.builtin.file:
+        path: "{{ netstation_context_new }}/rootfs/etc/skel/Desktop"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    # Executable, or XFCE asks whether to trust the shortcut on every click.
+    - name: Write the desktop shortcuts
+      ansible.builtin.template:
+        src: desktop-shortcut.desktop.j2
+        dest: "{{ netstation_context_new }}/rootfs/etc/skel/Desktop/{{ item.name | lower | regex_replace('[^a-z0-9]+', '-') }}.desktop"
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ netstation_desktop_shortcuts }}"
+      loop_control:
+        label: "{{ item.name }}"
+
 - name: Add the Veyon public keys
   when: netstation_veyon_enabled
   block:

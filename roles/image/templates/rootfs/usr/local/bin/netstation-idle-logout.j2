@@ -2,7 +2,8 @@
 # {{ ansible_managed }}
 # Logs the session out after {{ netstation_idle_logout_minutes | int }} minutes without keyboard or mouse input.
 # A warning comes {{ netstation_idle_logout_warning_seconds | int }} seconds before; any input cancels it, also when
-# the warning is hidden behind a full-screen RDP window.
+# the warning is hidden behind a full-screen RDP window. A session nobody has
+# touched yet is left alone: it's already fresh.
 {% set limit_seconds = netstation_idle_logout_minutes | int * 60 %}
 {% set warning_seconds = [netstation_idle_logout_warning_seconds | int, limit_seconds] | min %}
 warn_at={{ (limit_seconds - warning_seconds) * 1000 }}
@@ -12,8 +13,16 @@ idle() {
     xprintidle 2>/dev/null || echo 0
 }
 
+start=$(date +%s)
+
+# Whether there was any input since this session started.
+used() {
+    [ "$(idle)" -lt "$((($(date +%s) - start - 10) * 1000))" ]
+}
+
 while sleep 15; do
     [ "$(idle)" -ge "$warn_at" ] || continue
+    used || continue
 
     zenity --warning --no-wrap --timeout="$warning" \
         --text={{ netstation_idle_logout_message | quote }} &

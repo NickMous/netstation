@@ -21,11 +21,11 @@ netstation_panel_show_address: true
 # input, so the next person gets a fresh desktop. 0 turns it off. An RDP
 # session only disconnects and can be resumed.
 netstation_idle_logout_minutes: 0
-# The warning shown before logging out; any input cancels it.
+# How long before the logout a warning appears; any input cancels it.
 netstation_idle_logout_warning_seconds: 60
 netstation_idle_logout_message: >-
-  You will be logged out in {{ netstation_idle_logout_warning_seconds }}
-  seconds. Move the mouse or press a key to stay logged in.
+  You will be logged out soon because nobody has used this computer for a
+  while. Move the mouse or press a key to stay logged in.
 
 # Extra options for xfreerdp3, after the .rdp file and the password.
 netstation_rdp_options:

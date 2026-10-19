@@ -106,6 +106,9 @@
 - name: Share the internet connection with the clients
   ansible.builtin.import_tasks: nat.yml
 
+- name: Firewall
+  ansible.builtin.import_tasks: firewall.yml
+
 - name: Generate the LTSP initrd for the first time
   ansible.builtin.command: ltsp initrd
   args:

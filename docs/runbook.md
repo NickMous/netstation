@@ -48,7 +48,7 @@ haven't set up a vault password file.
 | Homepage, wallpaper, RDP options, packages, Firefox | `group_vars` (`netstation_homepage`, ...) | `image_build`, test, `image_promote` |
 | Files in the image | `files/rootfs/...` | `image_build`, test, `image_promote` |
 | Known clients, test client, per-client settings | `netstation_clients` | `server` |
-| DHCP, WireGuard peers, other server settings | `group_vars` | `server` |
+| DHCP, firewall, WireGuard peers, other server settings | `group_vars` | `server` |
 
 Always preview server changes first:
 
@@ -189,6 +189,18 @@ ssh <your-server-account>@<client-ip>
 ```
 
 Clients get new SSH host keys on every boot, so expect a host key warning.
+
+### Something can't reach the server
+
+The server's firewall only lets in SSH, network boot, NFS, and Cockpit and
+WireGuard when they're on. It logs what it drops:
+
+```bash
+sudo journalctl -k --grep netstation-firewall
+```
+
+Allow more with `netstation_firewall_extra_rules` (nftables rules, e.g.
+`tcp dport 8080 accept`) and run `server`.
 
 ### The scheduled staging build failed
 

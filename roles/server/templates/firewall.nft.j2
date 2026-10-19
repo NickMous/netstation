@@ -1,0 +1,39 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+# Incoming traffic: only what netstation needs. Forwarded traffic (NAT,
+# WireGuard) isn't filtered here.
+table inet netstation_firewall
+delete table inet netstation_firewall
+
+table inet netstation_firewall {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        iif "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+        ip protocol icmp accept
+        ip6 nexthdr icmpv6 accept
+
+        tcp dport 22 accept comment "SSH"
+        # Network boot: proxy or full DHCP, PXE boot server, TFTP, HTTP.
+        udp dport { 67, 4011 } accept comment "DHCP"
+        udp dport 69 accept comment "TFTP (single port)"
+        tcp dport 80 accept comment "Boot files"
+        # The image over NFSv3: rpcbind, nfsd and mountd (pinned port).
+        meta l4proto { tcp, udp } th dport { 111, 2049, {{ netstation_nfs_mountd_port }} } accept comment "NFS"
+        # The server's own DHCP client.
+        udp dport { 68, 546 } accept
+{% if netstation_cockpit_enabled | default(true) %}
+        tcp dport 9090 accept comment "Cockpit"
+{% endif %}
+{% if netstation_wireguard_enabled | default(false) %}
+        udp dport {{ netstation_wireguard_port | default(51820) }} accept comment "WireGuard"
+{% endif %}
+{% for rule in netstation_firewall_extra_rules %}
+        {{ rule }}
+{% endfor %}
+
+        limit rate 10/minute log prefix "netstation-firewall drop: "
+    }
+}

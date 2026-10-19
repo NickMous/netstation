@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- A firewall on the server (`netstation_firewall_enabled`, on by default):
+  nftables, only SSH, network boot, NFS, and Cockpit and WireGuard when on.
+  NFS mountd gets a fixed port (`netstation_nfs_mountd_port`) and dnsmasq
+  answers TFTP from port 69 only.
+
 ## 0.2.0 (2026-10-19)
 
 - Pushover alerts (`alerts` role, on when `netstation_pushover_app_token` and

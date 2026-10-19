@@ -21,6 +21,12 @@
     daemon_reload: true
   when: netstation_nat_enabled
 
+- name: Reload the firewall
+  ansible.builtin.systemd_service:
+    name: netstation-firewall
+    state: reloaded
+  when: netstation_firewall_enabled
+
 - name: Restart the NFS server
   ansible.builtin.systemd_service:
     name: nfs-server

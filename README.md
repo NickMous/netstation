@@ -19,6 +19,8 @@ every logout starts clean. All maintenance happens in one place, on the server.
   updates; promoting it stays a manual decision.
 - **Remote management.** Optional WireGuard VPN, Cockpit web console, SSH and
   Veyon on the clients.
+- **Secure defaults.** A firewall that only lets in what netstation needs, and
+  automatic security updates on the server.
 - **Alerts.** Optional Pushover alerts for failed builds and services, a
   hanging dnsmasq, a full disk, failed security updates and pending reboots.
 

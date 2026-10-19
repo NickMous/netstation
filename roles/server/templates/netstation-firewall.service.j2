@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Firewall for the netstation server
+# nftables.service flushes the whole ruleset, so load after it.
+After=nftables.service
+Before=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/netstation/firewall.nft
+ExecReload=/usr/sbin/nft -f /etc/netstation/firewall.nft
+ExecStop=/usr/sbin/nft delete table inet netstation_firewall
+
+[Install]
+WantedBy=multi-user.target

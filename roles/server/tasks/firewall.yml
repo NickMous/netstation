@@ -1,0 +1,48 @@
+---
+# Clients mount the image over NFSv3, which also needs mountd. Pin its port
+# so the firewall can allow it.
+- name: Pin the NFS mountd port
+  ansible.builtin.copy:
+    content: |
+      # Managed by Ansible (nickmous.netstation)
+      [mountd]
+      port={{ netstation_nfs_mountd_port }}
+    dest: /etc/nfs.conf.d/netstation.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the NFS server
+
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    install_recommends: false
+  when: netstation_firewall_enabled
+
+- name: Write the firewall rules
+  ansible.builtin.template:
+    src: firewall.nft.j2
+    dest: /etc/netstation/firewall.nft
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/nft -c -f %s
+  when: netstation_firewall_enabled
+  notify: Reload the firewall
+
+- name: Install the firewall service
+  ansible.builtin.template:
+    src: netstation-firewall.service.j2
+    dest: /etc/systemd/system/netstation-firewall.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: netstation_firewall_unit
+
+- name: Enable or disable the firewall
+  ansible.builtin.systemd_service:
+    name: netstation-firewall
+    daemon_reload: "{{ netstation_firewall_unit is changed }}"
+    enabled: "{{ netstation_firewall_enabled }}"
+    state: "{{ 'started' if netstation_firewall_enabled else 'stopped' }}"

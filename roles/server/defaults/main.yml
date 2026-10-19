@@ -43,6 +43,17 @@ netstation_dnsmasq_log_dhcp: false
 # Extra lines appended to the dnsmasq configuration.
 netstation_dnsmasq_extra: []
 
+# A firewall (nftables) that only lets in what netstation needs: SSH, network
+# boot, NFS, and Cockpit and WireGuard when they're on. Forwarding (NAT,
+# WireGuard) isn't filtered.
+netstation_firewall_enabled: true
+# Extra nftables rules for incoming traffic, e.g.:
+#   - tcp dport 8080 accept
+#   - ip saddr 192.168.1.0/24 tcp dport 3389 accept
+netstation_firewall_extra_rules: []
+# The fixed port for NFS mountd, so the firewall can allow it.
+netstation_nfs_mountd_port: 20048
+
 # Load kernel and initrd over HTTP instead of TFTP (much faster).
 netstation_http_boot: true
 

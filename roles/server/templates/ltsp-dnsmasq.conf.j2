@@ -8,6 +8,8 @@ port=0
 
 enable-tftp
 tftp-root={{ netstation_tftp_dir }}
+# Answer TFTP from port 69 only, so the firewall doesn't need random ports.
+tftp-single-port
 {% if netstation_dnsmasq_log_dhcp %}
 
 log-dhcp

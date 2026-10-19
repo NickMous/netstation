@@ -71,6 +71,12 @@ ansible-playbook nickmous.netstation.server --check --diff
 ansible-playbook nickmous.netstation.status
 ```
 
+Only the clients that are on, with IP and MAC address:
+
+```bash
+ansible-playbook nickmous.netstation.clients
+```
+
 Or on the server: `sudo netstation-image status`. It shows the production and
 staging builds, the rollback targets, the scheduled build, which clients are
 booted right now, and whether dnsmasq, NFS and nginx are running.
@@ -86,8 +92,10 @@ the server sends Pushover alerts:
 | Alert | When |
 |---|---|
 | *unit* failed | The scheduled build, dnsmasq, NFS or nginx failed, with its last log lines |
-| Problem / Resolved | Every 10 minutes the server checks: a service stopped, dnsmasq hangs, a disk over 85% full, the automatic security updates failed, or the server needs a reboot for a new kernel. It alerts once when a problem appears and once when it's gone. |
+| Problem / Resolved | Every 10 minutes the server checks: a service stopped, a disk over 85% full, the automatic security updates failed, or the server needs a reboot for a new kernel. It alerts once when a problem appears and once when it's gone. |
+| dnsmasq restarted / still hangs / works again | The dnsmasq watchdog (every 2 minutes) found dnsmasq hanging and restarted it |
 | Staging build ready to test | A staging build finished, with what changed compared with production |
+| Clients still on | At the `netstation_power_report` times, when any client is still on |
 
 Security updates install by themselves, but the server never reboots by
 itself: clients stop working while it restarts. Reboot it outside opening

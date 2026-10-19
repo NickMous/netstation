@@ -11,8 +11,9 @@ while sleep 30; do
     xorg=$(pgrep -o -x Xorg) || continue
     idle=$(DISPLAY=:0 XAUTHORITY=/var/run/lightdm/root/:0 xprintidle 2>/dev/null) || continue
     age=$(ps -o etimes= -p "$xorg" | tr -d ' ')
-    # The idle time starts at 0 with every X server (every login), so only
-    # count it as input when it's clearly shorter than the X server's age.
-    [ "$((idle / 1000))" -lt "$((age - 10))" ] || continue
+    # The idle time starts at 0 with every X server (every login), and the
+    # session's start fakes a key press (numlockx). Only count input from more
+    # than a minute after the X server started.
+    [ "$((age - idle / 1000))" -gt 60 ] || continue
     echo "$(($(date +%s) - idle / 1000))" >"$state"
 done

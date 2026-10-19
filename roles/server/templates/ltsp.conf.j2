@@ -17,6 +17,11 @@ PASSWORDS_NETSTATION="{{ netstation_session_user }}/"
 # LTSP sets autologin-user-timeout=2, which hands the login to the greeter.
 POST_INIT_NETSTATION_LIGHTDM="sed -i 's/^autologin-user-timeout=.*/autologin-user-timeout=0/' /etc/lightdm/lightdm.conf"
 {% endif %}
+{% if netstation_rdp_printers | default(false) %}
+# The clients' own CUPS, for printers passed into RDP sessions. By default
+# LTSP points clients at the server's CUPS and masks their own.
+CUPS_SERVER="localhost"
+{% endif %}
 # Keep SSH running on clients, with fresh host keys every boot.
 KEEP_SYSTEM_SERVICES="ssh"
 POST_INIT_NETSTATION_SSH_KEYS="ssh-keygen -A"

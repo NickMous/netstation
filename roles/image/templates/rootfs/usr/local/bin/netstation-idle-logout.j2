@@ -15,9 +15,10 @@ idle() {
 
 start=$(date +%s)
 
-# Whether there was any input since this session started.
+# Whether there was any input since this session started. The start itself
+# fakes a key press (numlockx), so input in the first minute doesn't count.
 used() {
-    [ "$(idle)" -lt "$((($(date +%s) - start - 10) * 1000))" ]
+    [ "$(idle)" -lt "$((($(date +%s) - start - 60) * 1000))" ]
 }
 
 while sleep 15; do

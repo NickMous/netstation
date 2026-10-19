@@ -103,19 +103,22 @@ cmd_build() {
 
     mkdir -p "$BUILD_DIR"
     rm -rf "$target.new"
-    log "Building $NETSTATION_STAGING_IMAGE from scratch ($NETSTATION_SUITE)"
+    log "Building $NETSTATION_STAGING_IMAGE from scratch"
+    log "[1/4] Installing Debian $NETSTATION_SUITE and $(echo "$packages" | tr ',' '\n' | wc -l) packages (the longest step)"
     # shellcheck disable=SC2016 # $1 is expanded by mmdebstrap's hook shell
     mmdebstrap --mode=root --variant=minbase \
         --aptopt="APT::Install-Recommends \"$recommends\"" \
         --include="$packages" \
+        --customize-hook='echo "==> [2/4] Configuring the image"' \
         --customize-hook="sync-in $CONTEXT_DIR/rootfs /" \
         --customize-hook='chroot "$1" /usr/local/sbin/netstation-image-setup' \
         "$NETSTATION_SUITE" "$target.new" "$CONTEXT_DIR/sources.list"
     rm -rf "$target"
     mv "$target.new" "$target"
 
-    log "Packing the image"
+    log "[3/4] Packing the image"
     ltsp image --backup=0 --mksquashfs-params="$NETSTATION_SQUASHFS_PARAMS" "$target"
+    log "[4/4] Updating the boot menu"
     ltsp --overwrite ipxe
     log "Staging build $(build_id "$STAGING_IMG") is ready. Test it, then run: netstation-image promote"
 }

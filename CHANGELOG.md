@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.2 (2026-10-19)
 
 - `image_diff` stops with a clear message when the server's tools are older
   than the collection (run `server` first), instead of a tar error.

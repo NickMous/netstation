@@ -10,6 +10,21 @@
     netstation_image_diff_dir: "{{ inventory_dir }}/../build/image-diff"
     netstation_image_diff_remote: /var/tmp/netstation-image-diff
   tasks:
+    # An older netstation-image ignores --dir; the server playbook updates it.
+    - name: Check that the server's netstation-image can write the versions
+      ansible.builtin.command: grep -q -e --dir /usr/local/sbin/netstation-image
+      register: netstation_diff_tool
+      changed_when: false
+      failed_when: false
+
+    - name: Stop when the server's tools are older than this collection
+      ansible.builtin.fail:
+        msg: >-
+          The server's netstation-image is older than this collection. Run the
+          server playbook first (ansible-playbook nickmous.netstation.server),
+          then this one again.
+      when: netstation_diff_tool.rc != 0
+
     - name: Compare the images
       ansible.builtin.command: /usr/local/sbin/netstation-image diff
       register: netstation_diff

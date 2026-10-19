@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- `image_diff` stops with a clear message when the server's tools are older
+  than the collection (run `server` first), instead of a tar error.
+- `netstation-image diff` rejects unknown options.
+
 ## 0.4.1 (2026-10-19)
 
 - `image_diff` copies both versions to `build/image-diff/` in your

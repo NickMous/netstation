@@ -186,6 +186,10 @@ file_changes() {
 }
 
 cmd_diff() {
+    case "${1:-}" in
+    "" | --summary | --dir) ;;
+    *) die "unknown option for diff: $1 (see: netstation-image help)" ;;
+    esac
     [ -f "$STAGING_IMG" ] || die "there is no staging image; build one first"
     [ -f "$PROD_IMG" ] || die "there is no production image to compare with"
     tmp=$(mktemp -d)

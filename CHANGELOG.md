@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 (2026-10-19)
 
 - A firewall on the server (`netstation_firewall_enabled`, on by default):
   nftables, only SSH, network boot, NFS, and Cockpit and WireGuard when on.

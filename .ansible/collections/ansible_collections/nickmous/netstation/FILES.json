@@ -634,7 +634,7 @@
    "name": "roles/image/files/netstation-image",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "a5260f462d59f6e6057baa489b6487108327ded5d78be1a97be00e7c09cbc5d3",
+   "chksum_sha256": "a7f94fff92b0ec191cae4094cfca7349228b47f0c5a031478d39dd0d6fd44250",
    "format": 1
   },
   {
@@ -879,7 +879,7 @@
    "name": "playbooks/image_build.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "16ebefe81d6bf09971f93ce8e0191efd49fd93af2e75af8fd5277d77d4363b0a",
+   "chksum_sha256": "9ed1ef3065d20ee500eb211a5074ca812c0f3d6221090398307549c9eaf8290e",
    "format": 1
   },
   {
@@ -922,6 +922,13 @@
    "ftype": "file",
    "chksum_type": "sha256",
    "chksum_sha256": "285c6a6b4cf771a228ae22c70d76f1d6658d214c566fd1a0114afa76c3e71022",
+   "format": 1
+  },
+  {
+   "name": "playbooks/image_diff.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "86a785610dffa94961b1f9948a5328449e41c08d5a1033f8a7c92bc185016b34",
    "format": 1
   },
   {
@@ -1026,7 +1033,7 @@
    "name": "README.md",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "cee88ec2cbff5d238edeb9250ada37d032b8de03ad9cf571c72976f3878d784d",
+   "chksum_sha256": "aaab4d4c6c60bbd9aee6004fba674b979ead872a8da704705615a7a3fd6c09c3",
    "format": 1
   },
   {
@@ -1040,7 +1047,7 @@
    "name": "docs/runbook.md",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "fbdf85e6dbf5a2ee9d59029813858b1cd3194f12fae8e2dd450ed38cd6940740",
+   "chksum_sha256": "e702c4df93cf9d7653ca2a0c1558130adda682830c6f1def76a1f0c1a47c7284",
    "format": 1
   },
   {

@@ -37,3 +37,13 @@
               {{ (netstation_build_log.stdout_lines | select('match', '^==> ') | list)
                  if (netstation_build_log.stdout_lines | select('match', '^==> .*ready') | list)
                  else netstation_build_log.stdout_lines[-25:] }}
+
+    - name: Compare staging with production
+      ansible.builtin.command: /usr/local/sbin/netstation-image diff
+      register: netstation_diff
+      changed_when: false
+      failed_when: false
+
+    - name: Show what changed
+      ansible.builtin.debug:
+        msg: "{{ (netstation_diff.stdout_lines + netstation_diff.stderr_lines) }}"

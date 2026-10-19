@@ -1,0 +1,15 @@
+---
+# What changed between the production and the staging image: packages, and
+# the files netstation puts in the image. Changes nothing.
+- name: Compare staging with production
+  hosts: netstation_servers
+  become: true
+  tasks:
+    - name: Compare the images
+      ansible.builtin.command: /usr/local/sbin/netstation-image diff
+      register: netstation_diff
+      changed_when: false
+
+    - name: Show what changed
+      ansible.builtin.debug:
+        msg: "{{ netstation_diff.stdout_lines }}"

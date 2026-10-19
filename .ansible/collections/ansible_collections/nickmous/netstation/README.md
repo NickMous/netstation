@@ -34,6 +34,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 | `nickmous.netstation.installer_iso` | Build an unattended Debian installer ISO for the server |
 | `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, WireGuard, Cockpit) |
 | `nickmous.netstation.image_build` | Build a new staging image from scratch |
+| `nickmous.netstation.image_diff` | Show what changed between production and staging |
 | `nickmous.netstation.image_promote` | Make the staging image the production image |
 | `nickmous.netstation.image_rollback` | Restore a previous production image |
 | `nickmous.netstation.status` | Images, booted clients, services |
@@ -41,7 +42,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 | `nickmous.netstation.veyon_computers` | Write the booted clients to a CSV file for Veyon Master |
 
 On the server, the same actions are available as `sudo netstation-image
-build|promote|rollback|status`.
+build|diff|promote|rollback|status`.
 
 ## Getting started
 

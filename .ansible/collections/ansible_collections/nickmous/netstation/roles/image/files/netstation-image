@@ -30,6 +30,8 @@ Commands:
   build              Build a fresh staging image from the current build context
   promote            Make the staging image the production image
   rollback [BUILD]   Restore a previous production image (default: the newest)
+  diff [--summary]   Show what changed between production and staging:
+                     packages, and the files netstation puts in the image
   status             Show images, booted clients and services
   clients            List booted clients as "IP MAC", one per line
 EOF
@@ -103,6 +105,9 @@ cmd_build() {
 
     mkdir -p "$BUILD_DIR"
     rm -rf "$target.new"
+    # The files netstation adds, so `diff` can compare them between builds.
+    (cd "$CONTEXT_DIR/rootfs" && find . -type f | sed 's|^\./||' | LC_ALL=C sort) \
+        >"$BUILD_DIR/netstation-files"
     log "Building $NETSTATION_STAGING_IMAGE from scratch"
     log "[1/4] Installing Debian $NETSTATION_SUITE and $(echo "$packages" | tr ',' '\n' | wc -l) packages (the longest step)"
     # shellcheck disable=SC2016 # $1 is expanded by mmdebstrap's hook shell
@@ -111,6 +116,7 @@ cmd_build() {
         --include="$packages" \
         --customize-hook='echo "==> [2/4] Configuring the image"' \
         --customize-hook="sync-in $CONTEXT_DIR/rootfs /" \
+        --customize-hook="copy-in $BUILD_DIR/netstation-files /etc" \
         --customize-hook='chroot "$1" /usr/local/sbin/netstation-image-setup' \
         "$NETSTATION_SUITE" "$target.new" "$CONTEXT_DIR/sources.list"
     rm -rf "$target"
@@ -121,6 +127,112 @@ cmd_build() {
     log "[4/4] Updating the boot menu"
     ltsp --overwrite ipxe
     log "Staging build $(build_id "$STAGING_IMG") is ready. Test it, then run: netstation-image promote"
+}
+
+# Installed packages in an image as "name version", sorted.
+packages() {
+    unsquashfs -cat "$1" var/lib/dpkg/status 2>/dev/null | awk '
+        BEGIN { RS = ""; FS = "\n" }
+        {
+            name = version = status = ""
+            for (i = 1; i <= NF; i++) {
+                if ($i ~ /^Package: /) name = substr($i, 10)
+                else if ($i ~ /^Version: /) version = substr($i, 10)
+                else if ($i ~ /^Status: /) status = substr($i, 9)
+            }
+            if (status == "install ok installed") print name, version
+        }' | LC_ALL=C sort
+}
+
+# One line per changed package: "updated|added|removed name old new".
+package_changes() {
+    packages "$PROD_IMG" >"$1/production.packages"
+    packages "$STAGING_IMG" >"$1/staging.packages"
+    LC_ALL=C join -a 1 -a 2 -e - -o 0,1.2,2.2 \
+        "$1/production.packages" "$1/staging.packages" |
+        awk '$2 == "-" { print "added", $0; next }
+             $3 == "-" { print "removed", $0; next }
+             $2 != $3 { print "updated", $0 }'
+}
+
+# The files netstation added to either image. Builds from before this list
+# existed fall back to the current build context.
+netstation_files() {
+    for img in "$PROD_IMG" "$STAGING_IMG"; do
+        unsquashfs -cat "$img" etc/netstation-files 2>/dev/null || true
+    done | LC_ALL=C sort -u | grep . ||
+        (cd "$CONTEXT_DIR/rootfs" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)
+}
+
+# One line per changed netstation file: "changed|added|removed path".
+file_changes() {
+    netstation_files | while read -r path; do
+        old=$1/production.file
+        new=$1/staging.file
+        unsquashfs -cat "$PROD_IMG" "$path" >"$old" 2>/dev/null || rm -f "$old"
+        unsquashfs -cat "$STAGING_IMG" "$path" >"$new" 2>/dev/null || rm -f "$new"
+        if [ ! -e "$old" ]; then
+            echo "added $path"
+        elif [ ! -e "$new" ]; then
+            echo "removed $path"
+        elif ! cmp -s "$old" "$new"; then
+            echo "changed $path"
+        fi
+    done
+}
+
+cmd_diff() {
+    [ -f "$STAGING_IMG" ] || die "there is no staging image; build one first"
+    [ -f "$PROD_IMG" ] || die "there is no production image to compare with"
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    package_changes "$tmp" >"$tmp/packages"
+    file_changes "$tmp" >"$tmp/files"
+
+    if [ "${1:-}" = --summary ]; then
+        echo "Staging $(build_id "$STAGING_IMG") compared with production $(build_id "$PROD_IMG"):"
+        echo "$(grep -c '^updated' "$tmp/packages") packages updated," \
+            "$(grep -c '^added' "$tmp/packages") added," \
+            "$(grep -c '^removed' "$tmp/packages") removed;" \
+            "$(wc -l <"$tmp/files") netstation files changed."
+        grep '^updated' "$tmp/packages" | awk '{ print $2 }' | head -n 15 | paste -sd ' ' - |
+            sed 's/^/Updated: /; /^Updated: $/d'
+        awk '{ print $2 }' "$tmp/files" | paste -sd ' ' - | sed 's/^/Files: /; /^Files: $/d'
+        return 0
+    fi
+
+    echo "Staging build $(build_id "$STAGING_IMG") compared with production build $(build_id "$PROD_IMG")"
+    echo
+    echo "Packages"
+    if [ -s "$tmp/packages" ]; then
+        while read -r change name old new; do
+            case $change in
+            updated) printf '  updated  %s %s -> %s\n' "$name" "$old" "$new" ;;
+            added) printf '  added    %s %s\n' "$name" "$new" ;;
+            removed) printf '  removed  %s %s\n' "$name" "$old" ;;
+            esac
+        done <"$tmp/packages"
+    else
+        echo "  no changes"
+    fi
+    echo
+    echo "Files from netstation"
+    if [ -s "$tmp/files" ]; then
+        while read -r change path; do
+            printf '  %-8s %s\n' "$change" "$path"
+            [ "$change" = changed ] || continue
+            unsquashfs -cat "$PROD_IMG" "$path" >"$tmp/old" 2>/dev/null
+            unsquashfs -cat "$STAGING_IMG" "$path" >"$tmp/new" 2>/dev/null
+            if grep -qI . "$tmp/old" && grep -qI . "$tmp/new"; then
+                diff -u --label "production/$path" --label "staging/$path" \
+                    "$tmp/old" "$tmp/new" | sed 's/^/      /' || true
+            else
+                echo "      (binary file)"
+            fi
+        done <"$tmp/files"
+    else
+        echo "  no changes"
+    fi
 }
 
 cmd_promote() {
@@ -235,6 +347,7 @@ rollback)
     lock
     cmd_rollback "$@"
     ;;
+diff) cmd_diff "$@" ;;
 status) cmd_status ;;
 clients) cmd_clients ;;
 -h | --help | help) usage ;;

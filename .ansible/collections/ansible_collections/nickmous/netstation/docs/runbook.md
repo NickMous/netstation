@@ -12,15 +12,25 @@ haven't set up a vault password file.
    ansible-playbook nickmous.netstation.image_build
    ```
 
-2. **Test** it: reboot the test client. It boots staging by default; its boot
+2. **Check** what changed compared with production. `image_build` shows this
+   at the end; after a scheduled build, run:
+
+   ```bash
+   ansible-playbook nickmous.netstation.image_diff
+   ```
+
+   It lists updated, added and removed packages, and the changes to the files
+   netstation puts in the image (settings, Firefox policies, scripts).
+
+3. **Test** it: reboot the test client. It boots staging by default; its boot
    menu also lets you pick production.
-3. **Promote** it. Clients switch to it on their next reboot.
+4. **Promote** it. Clients switch to it on their next reboot.
 
    ```bash
    ansible-playbook nickmous.netstation.image_promote
    ```
 
-4. Something wrong after all? **Roll back** to the previous production image:
+5. Something wrong after all? **Roll back** to the previous production image:
 
    ```bash
    ansible-playbook nickmous.netstation.image_rollback

@@ -25,3 +25,6 @@ build_ignore:
   - .git
   - .gitignore
   - "*.tar.gz"
+  - .github
+  - build
+  - collections

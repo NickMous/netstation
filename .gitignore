@@ -1,3 +1,5 @@
 *.tar.gz
 *.retry
 .vault_pass*
+build/
+collections/

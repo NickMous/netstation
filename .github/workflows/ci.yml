@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install the tools
+        run: pip install ansible-core ansible-lint shellcheck-py
+
+      - name: ansible-lint
+        run: ansible-lint
+
+      - name: shellcheck
+        run: shellcheck roles/*/files/*
+
+      - name: Syntax check of every playbook
+        run: |
+          ansible-galaxy collection build --output-path build
+          ansible-galaxy collection install build/*.tar.gz -p collections
+          for playbook in playbooks/*.yml; do
+            name=$(basename "$playbook" .yml)
+            echo "== $name"
+            ANSIBLE_COLLECTIONS_PATH=collections \
+              ansible-playbook -i examples/inventory --syntax-check "nickmous.netstation.$name"
+          done

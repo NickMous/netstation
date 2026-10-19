@@ -10,8 +10,9 @@ seconds=${1:-10}
 tftp_file=ltsp/undionly.kpxe
 
 version=$(dpkg-query -W -f '${Version}' dnsmasq 2>/dev/null || echo "not installed")
-hold=$(dpkg-query -W -f '${Status}' dnsmasq 2>/dev/null | cut -d' ' -f1)
-echo "dnsmasq version: $version${hold:+ ($hold)}"
+held=""
+dpkg-query -W -f '${Status}' dnsmasq 2>/dev/null | grep -q '^hold ' && held=" (held)"
+echo "dnsmasq version: $version$held"
 
 pid=$(systemctl show -p MainPID --value dnsmasq)
 if [ "${pid:-0}" -eq 0 ]; then

@@ -1,8 +1,8 @@
 # {{ ansible_managed }}
 # Started by OnFailure= of the units the alerts role watches.
 [Unit]
-Description=Send an alert that %I failed
+Description=Send an alert that %i failed
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/netstation-notify --failed %I
+ExecStart=/usr/local/sbin/netstation-notify --failed %i

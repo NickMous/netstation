@@ -81,7 +81,7 @@
    "name": "roles/server/defaults/main.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "5fed67031e2ac261858714cf482294c9da8b18603c1a09d56e801f17b1fff5c9",
+   "chksum_sha256": "81dd0d75af69f7f7d8e0815e1da8f3bb97674e1feb68f59f40f16e107adb3455",
    "format": 1
   },
   {
@@ -109,7 +109,7 @@
    "name": "roles/server/tasks/main.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "26e98d2c849b17b21c92df673934e7f0630a3ae886e870799bb3967c0664b322",
+   "chksum_sha256": "abb5d3be895477893e3b972dbcc6565da78758cabe3893775ea76f9dc2009d38",
    "format": 1
   },
   {
@@ -131,6 +131,13 @@
    "ftype": "file",
    "chksum_type": "sha256",
    "chksum_sha256": "47b918fa6face7c8e38a5575175f128ca6ab3b926ea4279b469c0e49a318515f",
+   "format": 1
+  },
+  {
+   "name": "roles/server/tasks/updates.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a1d6b9e65602946521096c50c813af39f775d0e14e02381581360c3c23878856",
    "format": 1
   },
   {
@@ -228,7 +235,7 @@
    "name": "roles/image/defaults/main.yml",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "53ae7d0addbcfae4de1db880000c33d335dcd3e13530c6e2b13bc8318acb763f",
+   "chksum_sha256": "250c7754422468d57fc4221b79de7d064cbb2f6e73f9e321cfb1f507d91046f3",
    "format": 1
   },
   {
@@ -543,7 +550,7 @@
    "name": "roles/image/templates/rootfs/usr/local/bin/netstation-idle-logout.j2",
    "ftype": "file",
    "chksum_type": "sha256",
-   "chksum_sha256": "1f79cd2b41ef9e4f3047b16ae4f1356f83c93783f1a8a5b31cbba4d5c5d38cbc",
+   "chksum_sha256": "2e725c93a787ab906b8e85a1786193c71a22c8b1c0c1de59542946f00bb812f3",
    "format": 1
   },
   {
@@ -1016,13 +1023,6 @@
    "format": 1
   },
   {
-   "name": "CHANGELOG.md",
-   "ftype": "file",
-   "chksum_type": "sha256",
-   "chksum_sha256": "7578574e4f28c131956f63a72b032805f51656dd07cb15f13a7516639f2cb65b",
-   "format": 1
-  },
-  {
    "name": "README.md",
    "ftype": "file",
    "chksum_type": "sha256",
@@ -1097,6 +1097,13 @@
    "ftype": "file",
    "chksum_type": "sha256",
    "chksum_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "format": 1
+  },
+  {
+   "name": "CHANGELOG.md",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "73dcb0f2221aebd19c5fa325d2d9a65224e788d76f54df579b49a39c1dcb0949",
    "format": 1
   }
  ],

@@ -1,0 +1,37 @@
+---
+# Security updates for the server itself. The client image gets its updates
+# from the image builds instead. Held packages (a pinned dnsmasq) are skipped.
+- name: Install unattended-upgrades
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: present
+    install_recommends: false
+  when: netstation_server_security_updates
+
+- name: Configure the automatic security updates
+  ansible.builtin.copy:
+    content: |
+      // Managed by Ansible (nickmous.netstation)
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+      APT::Periodic::AutocleanInterval "7";
+
+      // Security updates only, not the Debian point releases.
+      #clear Unattended-Upgrade::Origins-Pattern;
+      Unattended-Upgrade::Origins-Pattern {
+          "origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
+          "origin=Debian,codename=${distro_codename},label=Debian-Security";
+      };
+      // Never reboot by itself; the status and alerts say when a reboot is needed.
+      Unattended-Upgrade::Automatic-Reboot "false";
+    dest: /etc/apt/apt.conf.d/52netstation-updates
+    owner: root
+    group: root
+    mode: "0644"
+  when: netstation_server_security_updates
+
+- name: Turn the automatic security updates off
+  ansible.builtin.file:
+    path: /etc/apt/apt.conf.d/52netstation-updates
+    state: absent
+  when: not netstation_server_security_updates

@@ -2,6 +2,10 @@
 # Boot the server into a text console instead of a desktop.
 netstation_server_headless: true
 
+# Install Debian security updates on the server automatically (not the
+# point releases, no automatic reboots). Held packages are left alone.
+netstation_server_security_updates: true
+
 # How clients get an IP address:
 #   proxy: another DHCP server (router, Windows) hands out IPs; dnsmasq only
 #          adds the network-boot information.

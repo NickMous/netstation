@@ -32,6 +32,9 @@
 - name: Install dnsmasq
   ansible.builtin.import_tasks: dnsmasq.yml
 
+- name: Automatic security updates
+  ansible.builtin.import_tasks: updates.yml
+
 - name: Boot into a text console
   when: netstation_server_headless
   block:

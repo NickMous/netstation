@@ -14,7 +14,8 @@ First release.
   weekly staging builds.
 - An unattended Debian installer ISO for the server (`installer_iso`).
 - Clients: portal in Firefox, `.rdp` files in FreeRDP, a fresh home folder
-  for every session, an optional idle logout (`netstation_idle_logout_minutes`),
+  for every session and automatic login again after a logout, an optional
+  idle logout (`netstation_idle_logout_minutes`),
   the client's name and address in the panel, shut down and restart from the
   desktop, Firefox in its own language, no saved logins or form data.
 - Wake-on-LAN (`wake`) and a Veyon computer list (`veyon_computers`).

@@ -1,0 +1,34 @@
+# {{ ansible_managed }}
+# Plymouth script: the picture covers the screen, keeping its proportions,
+# with Debian's spinner below the middle. The image setup copies the spinner
+# frames in as throbber-0.png, throbber-1.png, ... and fills in their count.
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+background = Image("background.png");
+scale = screen_width / background.GetWidth();
+if (background.GetHeight() * scale < screen_height) {
+    scale = screen_height / background.GetHeight();
+}
+background_width = Math.Int(background.GetWidth() * scale);
+background_height = Math.Int(background.GetHeight() * scale);
+background_sprite = Sprite(background.Scale(background_width, background_height));
+background_sprite.SetX(Math.Int((screen_width - background_width) / 2));
+background_sprite.SetY(Math.Int((screen_height - background_height) / 2));
+background_sprite.SetZ(-100);
+
+frame_count = @FRAMES@;
+for (i = 0; i < frame_count; i++) {
+    frames[i] = Image("throbber-" + i + ".png");
+}
+spinner = Sprite(frames[0]);
+spinner.SetX(Math.Int((screen_width - frames[0].GetWidth()) / 2));
+spinner.SetY(Math.Int(screen_height * 0.75));
+
+tick = 0;
+fun refresh_callback() {
+    tick++;
+    spinner.SetImage(frames[Math.Int(tick / 2) % frame_count]);
+}
+Plymouth.SetRefreshFunction(refresh_callback);

@@ -23,9 +23,27 @@ ln -sf "$wallpaper" /usr/share/images/desktop-base/default
 dpkg-divert --local --rename --add /usr/share/backgrounds/xfce/xfce-x.svg
 ln -sf "$wallpaper" /usr/share/backgrounds/xfce/xfce-x.svg
 {% endif %}
+{% if netstation_boot_splash %}
+
+echo "==> Boot splash"
+{% if netstation_boot_splash_image | length > 0 %}
+theme=/usr/share/plymouth/themes/netstation
+frames=0
+for frame in /usr/share/plymouth/themes/spinner/throbber-*.png; do
+    cp "$frame" "$theme/throbber-$frames.png"
+    frames=$((frames + 1))
+done
+sed -i "s/@FRAMES@/$frames/" "$theme/netstation.script"
+plymouth-set-default-theme netstation
+{% else %}
+# The firmware's logo (BGRT) with a spinner; Debian's spinner without one.
+plymouth-set-default-theme bgrt
+{% endif %}
+{% endif %}
 
 echo "==> Initramfs"
-# LTSP needs overlayfs before the image is mounted.
+# LTSP needs overlayfs before the image is mounted. The boot splash goes in
+# here too.
 grep -qx overlay /etc/initramfs-tools/modules || echo overlay >>/etc/initramfs-tools/modules
 update-initramfs -u -k all
 

@@ -132,6 +132,23 @@
         group: root
         mode: "0644"
 
+- name: Add the boot splash picture
+  when: netstation_boot_splash and netstation_boot_splash_image | length > 0
+  block:
+    - name: Check that the boot splash picture is a PNG file
+      ansible.builtin.assert:
+        that: netstation_boot_splash_image | lower is match('.*\.png$')
+        fail_msg: Plymouth only reads PNG files; convert netstation_boot_splash_image to PNG.
+        quiet: true
+
+    - name: Copy the boot splash picture
+      ansible.builtin.copy:
+        src: "{{ netstation_boot_splash_image }}"
+        dest: "{{ netstation_context_new }}/rootfs/usr/share/plymouth/themes/netstation/background.png"
+        owner: root
+        group: root
+        mode: "0644"
+
 - name: Copy the site-specific image files
   ansible.builtin.copy:
     src: "{{ netstation_image_files_dir | regex_replace('/*$', '') }}/"

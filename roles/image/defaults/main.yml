@@ -8,6 +8,11 @@ netstation_homepage: about:blank
 # Empty keeps the Debian default.
 netstation_wallpaper: ""
 
+# A PNG picture on the Ansible controller that fills the screen while the
+# client boots, with a spinner. Empty shows the computer maker's logo, or
+# Debian's spinner. Needs netstation_boot_splash.
+netstation_boot_splash_image: ""
+
 netstation_numlock: true
 
 # Keep Wake-on-LAN armed on the clients' network cards. The BIOS/UEFI of each

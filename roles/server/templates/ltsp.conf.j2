@@ -8,6 +8,12 @@ DEFAULT_IMAGE="{{ netstation_default_image }}"
 MENU_TIMEOUT="-1"
 IPXE_{{ (netstation_image_name ~ '.img') | upper | regex_replace('[^A-Z0-9]', '_') }}="Production"
 IPXE_{{ (netstation_staging_image_name ~ '.img') | upper | regex_replace('[^A-Z0-9]', '_') }}="Staging"
+{% set kernel_parameters = (['quiet', 'splash', 'loglevel=3', 'rd.udev.log_level=3', 'vt.global_cursor_default=0']
+                            if netstation_boot_splash else []) + netstation_kernel_parameters %}
+{% if kernel_parameters | length > 0 %}
+# For every client; KERNEL_PARAMETERS in a client's own section replaces it.
+KERNEL_PARAMETERS="{{ kernel_parameters | join(' ') }}"
+{% endif %}
 
 [clients]
 {% if netstation_autologin %}

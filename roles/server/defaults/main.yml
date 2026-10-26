@@ -86,6 +86,9 @@ netstation_wake_broadcast: 255.255.255.255
 # How long test clients show the production/staging menu, in milliseconds.
 netstation_test_menu_timeout: 5000
 
+# Extra kernel parameters for all clients, e.g. ["nomodeset"].
+netstation_kernel_parameters: []
+
 # Extra ltsp.conf lines for all clients ([clients] section), as KEY: value.
 netstation_ltsp_clients_settings: {}
 # Extra ltsp.conf sections, as {section_name: {KEY: value}}.

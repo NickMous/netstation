@@ -29,6 +29,9 @@ netstation_locale: en_US.UTF-8
 netstation_keyboard_layout: us
 netstation_keyboard_variant: ""
 
+# Hide the boot messages on the clients behind a splash screen (Plymouth).
+netstation_boot_splash: true
+
 # Veyon (classroom-style monitoring and remote control) on the clients.
 netstation_veyon_enabled: false
 # Public keys the clients trust, e.g.:

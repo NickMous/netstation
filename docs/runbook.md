@@ -55,7 +55,7 @@ haven't set up a vault password file.
 
 | What | Where | Then run |
 |---|---|---|
-| Homepage, wallpaper, desktop shortcuts, RDP options and pass-through, idle logout, packages, Firefox | `group_vars` (`netstation_homepage`, ...) | `image_build`, test, `image_promote` |
+| Homepage, wallpaper, boot splash, desktop shortcuts, RDP options and pass-through, idle logout, packages, Firefox | `group_vars` (`netstation_homepage`, ...) | `image_build`, test, `image_promote` |
 | Files in the image | `files/rootfs/...` | `image_build`, test, `image_promote` |
 | Known clients, test client, per-client settings | `netstation_clients` | `server` |
 | DHCP, firewall, WireGuard peers, other server settings | `group_vars` | `server` |
@@ -215,6 +215,19 @@ netstation_clients:
   - mac: "d8:9e:f3:37:53:a1"
     settings:
       DEBUG_SHELL: 1
+```
+
+### A client hangs while it starts
+
+The boot splash hides the messages. Press Esc on the client to see them.
+To boot one client without the splash, give it its own kernel parameters,
+run `server`, and reboot that client:
+
+```yaml
+netstation_clients:
+  - mac: "d8:9e:f3:37:53:a1"
+    settings:
+      KERNEL_PARAMETERS: nosplash
 ```
 
 ### The client shows a login screen or loops back to it

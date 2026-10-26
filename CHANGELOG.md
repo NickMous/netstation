@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- The clients show a boot splash instead of boot messages
+  (`netstation_boot_splash`). `netstation_boot_splash_image` shows a picture
+  of your own; without one it's the computer maker's logo or a spinner.
+  Takes `server` for the kernel parameters and an image build for Plymouth.
+- `netstation_kernel_parameters` adds kernel parameters for all clients.
+
 ## 0.4.2 (2026-10-19)
 
 - `image_diff` stops with a clear message when the server's tools are older

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.1 (2026-10-26)
 
 - `netstation_initrd_gpu_drivers` keeps only the listed GPU drivers (and
   their firmware) in the initrd. With the boot splash, Plymouth adds them

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 (2026-10-26)
 
 - The clients show a boot splash instead of boot messages
   (`netstation_boot_splash`). `netstation_boot_splash_image` shows a picture

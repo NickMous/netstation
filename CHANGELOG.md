@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.2 (2026-10-26)
 
 - With the boot splash, LightDM takes over the splash on console 1 and X
   keeps it on screen, which halves the black screen before the desktop.

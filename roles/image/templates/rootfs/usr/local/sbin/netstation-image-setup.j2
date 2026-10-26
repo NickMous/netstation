@@ -39,6 +39,9 @@ plymouth-set-default-theme netstation
 # The firmware's logo (BGRT) with a spinner; Debian's spinner without one.
 plymouth-set-default-theme bgrt
 {% endif %}
+# LightDM runs X on console 1, where the splash is; no text login there.
+# Ctrl+Alt+F2 still has one.
+systemctl mask getty@tty1.service autovt@tty1.service
 {% endif %}
 
 echo "==> Initramfs"

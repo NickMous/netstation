@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- With the boot splash, LightDM takes over the splash on console 1 and X
+  keeps it on screen, which halves the black screen before the desktop.
+  Console 1 has no text login any more; Ctrl+Alt+F2 still does.
+
 ## 0.5.1 (2026-10-26)
 
 - `netstation_initrd_gpu_drivers` keeps only the listed GPU drivers (and

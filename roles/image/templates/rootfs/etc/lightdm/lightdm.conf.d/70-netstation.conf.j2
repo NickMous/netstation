@@ -1,8 +1,18 @@
 # {{ ansible_managed }}
 # LTSP adds autologin-user from AUTOLOGIN in ltsp.conf at boot.
+{% if netstation_boot_splash %}
+# X starts on the boot splash's console and keeps the splash on screen until
+# the desktop draws, instead of a black screen in between.
+[LightDM]
+minimum-vt=1
+
+{% endif %}
 [Seat:*]
 user-session=xfce
 autologin-session=xfce
+{% if netstation_boot_splash %}
+xserver-command=X -background none
+{% endif %}
 # A fresh home folder before every session and after every logout, then
 # automatic login again.
 session-setup-script=/usr/local/sbin/netstation-reset-home

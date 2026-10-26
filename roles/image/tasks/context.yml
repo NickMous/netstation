@@ -149,6 +149,14 @@
         group: root
         mode: "0644"
 
+    - name: Copy the disc behind the boot splash spinner
+      ansible.builtin.copy:
+        src: spinner-backdrop.png
+        dest: "{{ netstation_context_new }}/rootfs/usr/share/plymouth/themes/netstation/spinner-backdrop.png"
+        owner: root
+        group: root
+        mode: "0644"
+
 - name: Copy the site-specific image files
   ansible.builtin.copy:
     src: "{{ netstation_image_files_dir | regex_replace('/*$', '') }}/"

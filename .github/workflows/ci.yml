@@ -21,7 +21,7 @@ jobs:
         run: ansible-lint
 
       - name: shellcheck
-        run: shellcheck roles/*/files/*
+        run: shellcheck $(grep -l '^#!/bin/sh' roles/*/files/*)
 
       - name: Syntax check of every playbook
         run: |

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `netstation_initrd_gpu_drivers` keeps only the listed GPU drivers (and
+  their firmware) in the initrd. With the boot splash, Plymouth adds them
+  all, which grew the initrd from about 40 to 95 MB; `[i915]` brings it back
+  to about 57 MB.
+
 ## 0.5.0 (2026-10-26)
 
 - The clients show a boot splash instead of boot messages

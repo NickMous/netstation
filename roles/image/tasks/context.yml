@@ -132,6 +132,15 @@
         group: root
         mode: "0644"
 
+- name: Check the GPU drivers for the initrd
+  ansible.builtin.assert:
+    that: netstation_initrd_gpu_drivers | difference(netstation_gpu_driver_modules.keys()) | length == 0
+    fail_msg: >-
+      Unknown in netstation_initrd_gpu_drivers:
+      {{ netstation_initrd_gpu_drivers | difference(netstation_gpu_driver_modules.keys()) | join(', ') }}.
+      Pick from: {{ netstation_gpu_driver_modules.keys() | join(', ') }}.
+    quiet: true
+
 - name: Add the boot splash picture
   when: netstation_boot_splash and netstation_boot_splash_image | length > 0
   block:

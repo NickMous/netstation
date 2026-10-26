@@ -1,0 +1,26 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Plymouth puts every GPU driver and its firmware in the initrd, for an early
+# boot splash. This keeps only: {{ netstation_initrd_gpu_drivers | join(', ') }}.
+# The others still load later, from the image.
+PREREQ="plymouth"
+prereqs() {
+    echo "$PREREQ"
+}
+case "$1" in
+prereqs)
+    prereqs
+    exit 0
+    ;;
+esac
+
+# Hooks queue modules in this file; initramfs-tools copies them, with their
+# firmware, after the last hook.
+if [ ! -f "${__MODULES_TO_ADD:-}" ]; then
+    echo "W: netstation-gpu-drivers: no module list from initramfs-tools, keeping all GPU drivers" >&2
+    exit 0
+fi
+grep -vx{% for module in netstation_gpu_driver_modules | dict2items
+        | rejectattr('key', 'in', netstation_initrd_gpu_drivers) | map(attribute='value') | flatten %} -e {{ module }}{% endfor %}
+ "$__MODULES_TO_ADD" >"$__MODULES_TO_ADD.netstation" || true
+mv "$__MODULES_TO_ADD.netstation" "$__MODULES_TO_ADD"

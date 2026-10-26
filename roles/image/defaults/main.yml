@@ -13,6 +13,12 @@ netstation_wallpaper: ""
 # Debian's spinner. Needs netstation_boot_splash.
 netstation_boot_splash_image: ""
 
+# GPU drivers to keep in the initrd for the boot splash: i915, xe, amdgpu,
+# radeon and/or nouveau. Empty keeps them all, about 100 MB with firmware,
+# downloaded at every boot. A client with another GPU still works, but shows
+# the splash late or as text.
+netstation_initrd_gpu_drivers: []
+
 netstation_numlock: true
 
 # Keep Wake-on-LAN armed on the clients' network cards. The BIOS/UEFI of each

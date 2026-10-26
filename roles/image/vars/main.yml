@@ -15,6 +15,14 @@ netstation_image_packages: >-
       + (['xprintidle'] if netstation_idle_logout_minutes | int > 0 or netstation_power_off | length > 0 else [])
       + netstation_image_extra_packages) | unique }}
 
+# The kernel modules of each GPU driver netstation_initrd_gpu_drivers can keep.
+netstation_gpu_driver_modules:
+  i915: [i915, kvmgt]
+  xe: [xe]
+  amdgpu: [amdgpu, amdxcp]
+  radeon: [radeon]
+  nouveau: [nouveau]
+
 # Files rendered into the image; dest is relative to the image root.
 netstation_rootfs_templates:
   - dest: etc/default/keyboard
@@ -41,6 +49,9 @@ netstation_rootfs_templates:
     when: "{{ netstation_boot_splash and netstation_boot_splash_image | length > 0 }}"
   - dest: usr/share/plymouth/themes/netstation/netstation.script
     when: "{{ netstation_boot_splash and netstation_boot_splash_image | length > 0 }}"
+  - dest: etc/initramfs-tools/hooks/netstation-gpu-drivers
+    mode: "0755"
+    when: "{{ netstation_boot_splash and netstation_initrd_gpu_drivers | length > 0 }}"
   - dest: usr/share/mime/packages/netstation-rdp.xml
   - dest: usr/share/applications/netstation-rdp.desktop
   - dest: usr/lib/firefox-esr/distribution/policies.json

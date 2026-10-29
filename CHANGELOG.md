@@ -12,6 +12,7 @@
   says what went wrong (wrong password, account blocked, can't connect), and
   a normal disconnect no longer shows "The connection failed". xfreerdp3's
   output goes to the client's journal (`journalctl -t netstation-rdp`).
+  `netstation_rdp_messages` sets the dialog texts, e.g. in another language.
   Takes `server` and an image build.
 ## 0.5.2 (2026-10-26)
 

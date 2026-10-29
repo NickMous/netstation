@@ -5,6 +5,11 @@
 # crash or an error is reported to the server with netstation-report.
 set -u
 
+# The dialog texts, from netstation_rdp_messages.
+{% for key in ['title', 'wrong_password', 'crashed', 'account_blocked', 'password_expired', 'unreachable', 'failed'] %}
+msg_{{ key }}={{ netstation_rdp_messages[key] | quote }}
+{% endfor %}
+
 file=$1
 
 # .rdp files saved on Windows are usually UTF-16.
@@ -19,7 +24,7 @@ setting() {
 user=$(setting username)
 address=$(setting 'full address')
 
-pass=$(zenity --password --title="Remote Desktop${user:+ - $user}") || exit 0
+pass=$(zenity --password --title="$msg_title${user:+ - $user}") || exit 0
 
 log=$(mktemp)
 trap 'rm -f "$log"' EXIT
@@ -50,39 +55,38 @@ case $result in
     exit 0
     ;;
 "exit 132" | "exit 134" | "exit 154" | "exit 159")
-    zenity --error --title="Remote Desktop" \
-        --text="The password is wrong. Check it and try again."
+    zenity --error --no-markup --title="$msg_title" --text="$msg_wrong_password"
     exit 0
     ;;
 signal*)
     kind=crash
     title="Remote Desktop crashed"
     problem="xfreerdp3 crashed (signal $code, $(kill -l "$code" 2>/dev/null || echo unknown))."
-    text="Remote Desktop closed unexpectedly. Try again; if it keeps happening, tell IT."
+    text=$msg_crashed
     ;;
 "exit 135" | "exit 151" | "exit 157")
     kind=error
     title="Remote Desktop account blocked"
     problem="The account is locked out, disabled or expired (exit code $code)."
-    text="Your account is locked or disabled. Ask IT to unlock it."
+    text=$msg_account_blocked
     ;;
 "exit 148" | "exit 149" | "exit 152")
     kind=error
     title="Remote Desktop password expired"
     problem="The password has expired or must be changed (exit code $code)."
-    text="Your password has expired. Ask IT to reset it."
+    text=$msg_password_expired
     ;;
 "exit 131" | "exit 139" | "exit 140" | "exit 141" | "exit 143" | "exit 147")
     kind=error
     title="Remote Desktop can't connect"
     problem="Couldn't reach the remote computer (exit code $code)."
-    text="Can't reach the remote computer. Try again in a few minutes; if it keeps happening, tell IT."
+    text=$msg_unreachable
     ;;
 *)
     kind=error
     title="Remote Desktop error"
     problem="xfreerdp3 stopped with exit code $code."
-    text="The connection failed. Try again; if it keeps happening, tell IT."
+    text=$msg_failed
     ;;
 esac
 
@@ -90,4 +94,4 @@ details="$problem Server: ${address:-?}, user: ${user:-?}.
 $(errors)"
 # In the background, so the dialog shows right away.
 netstation-report "$kind" "$title" "$details" &
-zenity --error --title="Remote Desktop" --text="$text"
+zenity --error --no-markup --title="$msg_title" --text="$text"

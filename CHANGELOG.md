@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (2026-10-29)
 
 - `netstation_clients` takes `label`: who or what the client is for (a
   person, a room, a desk). It shows in the clients-still-on alert, the

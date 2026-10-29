@@ -97,6 +97,13 @@ the server sends Pushover alerts:
 | dnsmasq restarted / still hangs / works again | The dnsmasq watchdog (every 2 minutes) found dnsmasq hanging and restarted it |
 | Staging build ready to test | A staging build finished, with what changed compared with production |
 | Clients still on | At the `netstation_power_report` times, when any client is still on |
+| *person*: Remote Desktop crashed | xfreerdp3 crashed on a client (with a sound), with its last errors |
+| *person*: Remote Desktop error / can't connect / account blocked / password expired | xfreerdp3 stopped with an error (without a sound). Wrong passwords and normal disconnects aren't reported. |
+
+Alerts about a client name it by `person` and `hostname` from
+`netstation_clients`, or by its hostname or IP address. A client sends at most
+one alert every 10 minutes (`netstation_alerts_client_quiet_minutes`); the
+others are only logged: `sudo journalctl -t netstation-client-report`.
 
 Security updates install by themselves, but the server never reboots by
 itself: clients stop working while it restarts. Reboot it outside opening
@@ -241,6 +248,18 @@ findmnt /home/kiosk                      # must print nothing (home in RAM)
 grep -rn autologin /etc/lightdm/
 sudo tail -40 /var/log/lightdm/lightdm.log
 ```
+
+### Remote Desktop fails on a client
+
+The dialog on the client says roughly what went wrong, and crashes and errors
+come in as alerts. For xfreerdp3's full output, log in to the client (below)
+while it's still on, and run:
+
+```bash
+sudo journalctl -t netstation-rdp
+```
+
+The client keeps its journal in memory, so it's gone after a reboot.
 
 ### Logging in to a client
 

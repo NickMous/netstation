@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- `netstation_clients` takes `person`: who uses the client. It shows in the
+  clients-still-on alert, the `clients` playbook and the new client alerts.
+- When xfreerdp3 crashes or fails with an error, the client reports it to the
+  server, which sends an alert naming the client
+  (`netstation_alerts_client_reports`, at most one per client every
+  `netstation_alerts_client_quiet_minutes`). The dialog on the client now
+  says what went wrong (wrong password, account blocked, can't connect), and
+  a normal disconnect no longer shows "The connection failed". xfreerdp3's
+  output goes to the client's journal (`journalctl -t netstation-rdp`).
+  Takes `server` and an image build.
 ## 0.5.2 (2026-10-26)
 
 - With the boot splash, LightDM takes over the splash on console 1 and X

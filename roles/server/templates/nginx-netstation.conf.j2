@@ -5,6 +5,11 @@
 # reads this log to tell which clients are on.
 log_format netstation_alive '$msec $remote_addr $arg_mac $arg_host';
 
+# Problems clients report (netstation-report); the alerts role's
+# netstation-client-reports sends them as alerts. The arguments stay
+# URL-encoded, so each is one field.
+log_format netstation_report '$msec $remote_addr $arg_mac $arg_host $arg_kind $arg_title $arg_details';
+
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -17,6 +22,11 @@ server {
 
     location = /netstation-alive {
         access_log /var/log/nginx/netstation-alive.log netstation_alive;
+        return 204;
+    }
+
+    location = /netstation-report {
+        access_log /var/log/nginx/netstation-report.log netstation_report;
         return 204;
     }
 }

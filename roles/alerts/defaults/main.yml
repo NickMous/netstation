@@ -26,3 +26,11 @@ netstation_alerts_disk_percent: 85
 
 # Alert when a staging build is ready, with what changed compared with production.
 netstation_alerts_staging_ready: true
+
+# Alert when a client reports a problem: Remote Desktop crashed (with a
+# sound) or failed with an error (without), with the person and hostname from
+# netstation_clients. Wrong passwords and normal disconnects aren't reported.
+netstation_alerts_client_reports: true
+# At most one alert per client in this many minutes; the rest only go to the
+# journal (journalctl -t netstation-client-report).
+netstation_alerts_client_quiet_minutes: 10

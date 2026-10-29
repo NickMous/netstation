@@ -1,12 +1,18 @@
 #!/bin/sh
 # Sends an alert with Pushover and writes it to the journal.
-# Usage: netstation-notify TITLE [MESSAGE]    (MESSAGE from stdin if left out)
+# Usage: netstation-notify [--priority N] TITLE [MESSAGE]   (MESSAGE from stdin if left out)
 #        netstation-notify --failed UNIT      (the unit's last log lines)
+# Pushover priority: -1 arrives without a sound, 0 (the default) with one.
 set -eu
 
 # shellcheck source=/dev/null
 . /etc/netstation/alerts.env
 
+priority=0
+if [ "${1:-}" = --priority ]; then
+    priority=${2:?priority missing}
+    shift 2
+fi
 if [ "${1:-}" = --failed ]; then
     unit=${2:?unit name missing}
     # Another script handles and reports this failure (e.g. the dnsmasq watchdog).
@@ -27,4 +33,5 @@ printf 'form-string = "token=%s"\nform-string = "user=%s"\n' \
     "$PUSHOVER_APP_TOKEN" "$PUSHOVER_USER_KEY" |
     curl -fsS --max-time 30 --retry 3 --config - \
         --form-string "title=$title" --form-string "message=$message" \
+        --form-string "priority=$priority" \
         https://api.pushover.net/1/messages.json >/dev/null

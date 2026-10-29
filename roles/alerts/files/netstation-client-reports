@@ -1,0 +1,72 @@
+#!/bin/sh
+# Sends the problems clients report (netstation-report, logged by nginx) as
+# alerts, with the person and hostname from netstation_clients. At most one
+# alert per client every NETSTATION_ALERTS_CLIENT_QUIET_MINUTES; the others
+# only go to the journal. Started by netstation-client-reports.timer.
+set -u
+
+# shellcheck source=/dev/null
+. /etc/netstation/alerts.env
+
+log=/var/log/nginx/netstation-report.log
+# "INODE OFFSET": how far the log has been read.
+state=/var/lib/netstation/client-reports
+# "MAC TIME": when each client last sent an alert.
+sent=/var/lib/netstation/client-report-times
+mkdir -p "${state%/*}"
+touch "$sent"
+
+[ -f "$log" ] || exit 0
+inode=$(stat -c %i "$log")
+size=$(stat -c %s "$log")
+if ! read -r old_inode offset 2>/dev/null <"$state"; then
+    # The first run skips what's already there.
+    echo "$inode $size" >"$state"
+    exit 0
+fi
+
+# URL-decodes its argument; nginx logs an empty argument as "-".
+decode() {
+    [ "$1" != - ] || return 0
+    printf '%s' "$1" | perl -pe 's/\+/ /g; s/%([0-9A-Fa-f]{2})/chr hex $1/ge'
+}
+
+# The new lines. After logrotate, first the rest of the old log.
+new_lines() {
+    if [ "$inode" != "$old_inode" ]; then
+        if [ -f "$log.1" ] && [ "$(stat -c %i "$log.1")" = "$old_inode" ]; then
+            tail -c +"$((offset + 1))" "$log.1"
+        fi
+        offset=0
+    fi
+    [ "$size" -ge "$offset" ] || offset=0
+    tail -c +"$((offset + 1))" "$log" | head -c "$((size - offset))"
+}
+
+now=$(date +%s)
+new_lines | while read -r _ ip mac host kind title details; do
+    mac=$(decode "$mac" | tr 'A-F' 'a-f')
+    host=$(decode "$host")
+    title=$(decode "$title")
+    details=$(decode "$details")
+    name=$(/usr/local/sbin/netstation-client-name "$mac" "$host" 2>/dev/null)
+    client="$ip, ${mac:-unknown MAC}"
+    case $kind in
+    crash) priority=0 ;;
+    *) priority=-1 ;;
+    esac
+
+    last=$(awk -v mac="$mac" '$1 == mac { print $2 }' "$sent")
+    if [ -n "$last" ] && [ "$((now - last))" -lt "$((NETSTATION_ALERTS_CLIENT_QUIET_MINUTES * 60))" ]; then
+        logger -t netstation-client-report -- "Not sent, ${name:-$ip} ($client) alerted less than $NETSTATION_ALERTS_CLIENT_QUIET_MINUTES minutes ago: ${title:-?}: $details"
+        continue
+    fi
+    /usr/local/sbin/netstation-notify --priority "$priority" "${name:-$ip}: ${title:-Problem}" \
+        "$details
+Client: $client" || true
+    grep -v "^$mac " "$sent" >"$sent.new" || true
+    echo "$mac $now" >>"$sent.new"
+    mv "$sent.new" "$sent"
+done
+
+echo "$inode $size" >"$state"

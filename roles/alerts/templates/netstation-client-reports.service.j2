@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Send the problems clients reported as alerts
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/netstation-client-reports

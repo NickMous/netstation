@@ -32,6 +32,7 @@
       loop:
         - netstation-notify
         - netstation-health
+        - netstation-client-reports
 
     - name: Install the alert units
       ansible.builtin.template:
@@ -44,6 +45,8 @@
         - netstation-alert@.service
         - netstation-health.service
         - netstation-health.timer
+        - netstation-client-reports.service
+        - netstation-client-reports.timer
       notify: Reload systemd
 
     - name: Create the drop-in folders
@@ -74,14 +77,23 @@
         enabled: true
         state: started
 
+    - name: Start or stop sending the problems clients report
+      ansible.builtin.systemd_service:
+        name: netstation-client-reports.timer
+        enabled: "{{ netstation_alerts_client_reports | bool }}"
+        state: "{{ 'started' if netstation_alerts_client_reports | bool else 'stopped' }}"
+
 - name: Turn the alerts off
   when: not netstation_alerts_enabled | bool
   block:
-    - name: Stop the health check
+    - name: Stop the health check and the client reports
       ansible.builtin.systemd_service:
-        name: netstation-health.timer
+        name: "{{ item }}"
         enabled: false
         state: stopped
+      loop:
+        - netstation-health.timer
+        - netstation-client-reports.timer
       failed_when: false
 
     - name: Remove the alert drop-ins and settings

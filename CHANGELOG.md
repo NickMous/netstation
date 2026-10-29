@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Remote Desktop alerts include the message the user saw in the dialog, and
+  keep the start of long error output instead of the end.
 ## 0.6.0 (2026-10-29)
 
 - `netstation_clients` takes `label`: who or what the client is for (a

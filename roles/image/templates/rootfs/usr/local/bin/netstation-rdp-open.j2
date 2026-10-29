@@ -91,6 +91,7 @@ signal*)
 esac
 
 details="$problem Server: ${address:-?}, user: ${user:-?}.
+Shown: $text
 $(errors)"
 # In the background, so the dialog shows right away.
 netstation-report "$kind" "$title" "$details" &

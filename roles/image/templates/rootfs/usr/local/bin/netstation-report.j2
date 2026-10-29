@@ -14,9 +14,10 @@ server=$(tr ' ' '\n' </proc/cmdline | sed -n 's/^nfsroot=\([^:]*\):.*/\1/p')
 dev=$(ip -o route get "$server" | sed -n 's/.* dev \([^ ]*\).*/\1/p')
 mac=$(cat "/sys/class/net/$dev/address")
 
-# The details go in the URL, so keep them short.
+# The details go in the URL, so keep them short. Their start says what
+# happened, so cut off the end.
 curl -fsS --max-time 10 -o /dev/null -G \
     --data-urlencode "mac=$mac" --data-urlencode "host=$(hostname)" \
     --data-urlencode "kind=$kind" --data-urlencode "title=$title" \
-    --data-urlencode "details=$(printf '%s' "$details" | tail -c 700)" \
+    --data-urlencode "details=$(printf '%s' "$details" | head -c 700)" \
     "http://$server/netstation-report"

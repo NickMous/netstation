@@ -1,6 +1,8 @@
 #!/bin/bash
 # {{ ansible_managed }}
 # Opens an .rdp file in xfreerdp3 and asks for the password in a dialog.
+# xfreerdp3's output goes to the journal (journalctl -t netstation-rdp); a
+# crash or an error is reported to the server with netstation-report.
 set -u
 
 file=$1
@@ -11,10 +13,81 @@ if head -c 2 "$file" | od -An -tx1 | grep -qE 'ff fe|fe ff'; then
 else
     content=$(cat "$file")
 fi
-user=$(printf '%s\n' "$content" | tr -d '\r' | grep -i -m 1 '^username:s:' | cut -d: -f3-)
+setting() {
+    printf '%s\n' "$content" | tr -d '\r' | grep -i -m 1 "^$1:s:" | cut -d: -f3-
+}
+user=$(setting username)
+address=$(setting 'full address')
 
 pass=$(zenity --password --title="Remote Desktop${user:+ - $user}") || exit 0
 
-xfreerdp3 "$file" /p:"$pass" {{ (netstation_rdp_redirect_options + netstation_rdp_options) | map('quote') | join(' ') }} ||
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
+
+# Through perl, to tell a crash (killed by a signal) from xfreerdp3's own exit
+# codes, which also go above 128. Prints "exit CODE" or "signal NUMBER".
+result=$(perl -e '
+    open my $result, ">&", \*STDOUT or die;
+    open STDOUT, ">", shift or die;
+    open STDERR, ">&", \*STDOUT or die;
+    system { $ARGV[0] } @ARGV;
+    print $result $? == -1 ? "exit 127" : $? & 127 ? "signal " . ($? & 127) : "exit " . ($? >> 8);
+' "$log" xfreerdp3 "$file" /p:"$pass" {{ (netstation_rdp_redirect_options + netstation_rdp_options) | map('quote') | join(' ') }})
+code=${result#* }
+systemd-cat -t netstation-rdp <"$log"
+logger -t netstation-rdp -- "xfreerdp3 to ${address:-?} as ${user:-?}: $result"
+
+# The last errors and warnings, without the timestamps.
+errors() {
+    { grep -E '\[(ERROR|FATAL|WARN)\]' "$log" || cat "$log"; } |
+        sed 's/^\[[^]]*\] \[[^]]*\] //' | tail -n 8
+}
+
+# Exit codes from FreeRDP's client/X11/xfreerdp.h.
+case $result in
+"exit 0" | "exit 1" | "exit 2" | "exit 3" | "exit 5" | "exit 11" | "exit 145")
+    # Disconnected or logged off normally, or cancelled.
+    exit 0
+    ;;
+"exit 132" | "exit 134" | "exit 154" | "exit 159")
     zenity --error --title="Remote Desktop" \
-        --text="The connection failed. Check your password and try again."
+        --text="The password is wrong. Check it and try again."
+    exit 0
+    ;;
+signal*)
+    kind=crash
+    title="Remote Desktop crashed"
+    problem="xfreerdp3 crashed (signal $code, $(kill -l "$code" 2>/dev/null || echo unknown))."
+    text="Remote Desktop closed unexpectedly. Try again; if it keeps happening, tell IT."
+    ;;
+"exit 135" | "exit 151" | "exit 157")
+    kind=error
+    title="Remote Desktop account blocked"
+    problem="The account is locked out, disabled or expired (exit code $code)."
+    text="Your account is locked or disabled. Ask IT to unlock it."
+    ;;
+"exit 148" | "exit 149" | "exit 152")
+    kind=error
+    title="Remote Desktop password expired"
+    problem="The password has expired or must be changed (exit code $code)."
+    text="Your password has expired. Ask IT to reset it."
+    ;;
+"exit 131" | "exit 139" | "exit 140" | "exit 141" | "exit 143" | "exit 147")
+    kind=error
+    title="Remote Desktop can't connect"
+    problem="Couldn't reach the remote computer (exit code $code)."
+    text="Can't reach the remote computer. Try again in a few minutes; if it keeps happening, tell IT."
+    ;;
+*)
+    kind=error
+    title="Remote Desktop error"
+    problem="xfreerdp3 stopped with exit code $code."
+    text="The connection failed. Try again; if it keeps happening, tell IT."
+    ;;
+esac
+
+details="$problem Server: ${address:-?}, user: ${user:-?}.
+$(errors)"
+# In the background, so the dialog shows right away.
+netstation-report "$kind" "$title" "$details" &
+zenity --error --title="Remote Desktop" --text="$text"

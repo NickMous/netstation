@@ -76,6 +76,8 @@ netstation_rootfs_templates:
   - dest: etc/systemd/system/netstation-heartbeat.timer
   - dest: usr/local/bin/netstation-rdp-open
     mode: "0755"
+  - dest: usr/local/bin/netstation-report
+    mode: "0755"
   - dest: usr/local/sbin/netstation-reset-home
     mode: "0755"
   - dest: usr/local/sbin/netstation-image-setup

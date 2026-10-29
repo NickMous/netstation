@@ -1,0 +1,22 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Reports a problem on this client to the server, which sends it as a
+# Pushover alert with the name of the person who uses the client.
+# Usage: netstation-report crash|error TITLE [DETAILS]   (DETAILS from stdin if left out)
+set -u
+
+kind=${1:?kind missing}
+title=${2:?title missing}
+if [ $# -ge 3 ]; then details=$3; else details=$(cat); fi
+
+server=$(tr ' ' '\n' </proc/cmdline | sed -n 's/^nfsroot=\([^:]*\):.*/\1/p')
+[ -n "$server" ] || exit 0
+dev=$(ip -o route get "$server" | sed -n 's/.* dev \([^ ]*\).*/\1/p')
+mac=$(cat "/sys/class/net/$dev/address")
+
+# The details go in the URL, so keep them short.
+curl -fsS --max-time 10 -o /dev/null -G \
+    --data-urlencode "mac=$mac" --data-urlencode "host=$(hostname)" \
+    --data-urlencode "kind=$kind" --data-urlencode "title=$title" \
+    --data-urlencode "details=$(printf '%s' "$details" | tail -c 700)" \
+    "http://$server/netstation-report"

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 (2026-10-29)
 
 - Remote Desktop alerts include the message the user saw in the dialog, and
   keep the start of long error output instead of the end.

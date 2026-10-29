@@ -75,6 +75,7 @@ netstation_autologin: true
 # Clients known by MAC address:
 #   - mac: "aa:bb:cc:dd:ee:ff"
 #     hostname: pc01            # optional
+#     person: Anna de Vries     # optional: who uses it, shown in alerts
 #     test: true                # optional: boots staging, shows the boot menu
 #     settings: {}              # optional: extra ltsp.conf lines for this client
 netstation_clients: []

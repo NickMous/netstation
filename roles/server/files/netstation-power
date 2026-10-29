@@ -15,11 +15,6 @@ clients_on() {
     /usr/local/sbin/netstation-image clients | awk '$2 != "unknown"'
 }
 
-# A client's name from netstation_clients, or its IP address.
-name_of() {
-    awk -v mac="$2" '$1 == mac { print $2; found = 1 } END { if (!found) print "" }' \
-        /etc/netstation/clients | grep . || echo "$1"
-}
 
 case ${1:-} in
 wake)
@@ -40,8 +35,8 @@ learn)
     ;;
 report)
     on=$(clients_on | while read -r ip mac; do
-        name=$(name_of "$ip" "$mac")
-        if [ "$name" = "$ip" ]; then echo "$ip ($mac)"; else echo "$name ($ip)"; fi
+        name=$(/usr/local/sbin/netstation-client-name "$mac")
+        if [ -n "$name" ]; then echo "$name ($ip)"; else echo "$ip ($mac)"; fi
     done)
     [ -n "$on" ] || exit 0
     message="$(echo "$on" | wc -l) still on: $(echo "$on" | paste -sd ',' - | sed 's/,/, /g')"

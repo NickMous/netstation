@@ -1,3 +1,4 @@
+{# Tab-separated: MAC, hostname, person. Read by netstation-client-name. #}
 {% for client in netstation_clients %}
-{{ client.mac | lower }} {{ client.hostname | default('') }}
+{{ client.mac | lower }}	{{ client.hostname | default('') }}	{{ client.person | default('') }}
 {% endfor %}

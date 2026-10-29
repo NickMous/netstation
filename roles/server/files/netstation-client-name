@@ -1,0 +1,14 @@
+#!/bin/sh
+# Prints a client's name from netstation_clients: "person (hostname)", or
+# whichever of the two is set. Prints FALLBACK (or nothing) for unknown clients.
+# Usage: netstation-client-name MAC [FALLBACK]
+set -u
+
+mac=$(printf '%s' "${1:?MAC address missing}" | tr 'A-F' 'a-f')
+awk -F '\t' -v mac="$mac" -v fallback="${2:-}" '
+    $1 == mac {
+        if ($3 != "" && $2 != "") name = $3 " (" $2 ")"
+        else name = $3 $2
+    }
+    END { print (name != "" ? name : fallback) }
+' /etc/netstation/clients 2>/dev/null || printf '%s\n' "${2:-}"

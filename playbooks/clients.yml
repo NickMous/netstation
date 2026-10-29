@@ -1,30 +1,22 @@
 ---
-# The clients that are on right now: IP and MAC address, and the name from
-# netstation_clients when they have one. Changes nothing.
+# The clients that are on right now: IP and MAC address, and the person and
+# hostname from netstation_clients when they have them. Changes nothing.
 - name: Show the clients that are on
   hosts: netstation_servers
   become: true
   tasks:
     - name: Find the clients
-      ansible.builtin.command: /usr/local/sbin/netstation-image clients
+      ansible.builtin.shell: |
+        set -o pipefail
+        /usr/local/sbin/netstation-image clients | while read -r ip mac; do
+            echo "$ip  $mac  $(/usr/local/sbin/netstation-client-name "$mac")"
+        done
+      args:
+        executable: /bin/bash
       register: netstation_clients_on
       changed_when: false
 
-    - name: Name each client
-      vars:
-        netstation_names: >-
-          {{ dict(netstation_clients | default([]) | selectattr('hostname', 'defined')
-                  | map(attribute='mac') | map('lower')
-                  | zip(netstation_clients | default([]) | selectattr('hostname', 'defined')
-                        | map(attribute='hostname'))) }}
-      ansible.builtin.set_fact:
-        netstation_client_rows: >-
-          {{ netstation_client_rows | default([])
-             + [(item.split()[0] ~ '  ' ~ item.split()[1] ~ '  '
-                 ~ netstation_names[item.split()[1] | lower] | default('')) | trim] }}
-      loop: "{{ netstation_clients_on.stdout_lines }}"
-
     - name: Show the clients
       ansible.builtin.debug:
-        msg: "{{ [(netstation_client_rows | default([]) | length) ~ ' clients on (IP, MAC, name)']
-                 + netstation_client_rows | default([]) }}"
+        msg: "{{ [(netstation_clients_on.stdout_lines | length) ~ ' clients on (IP, MAC, name)']
+                 + netstation_clients_on.stdout_lines | map('trim') | list }}"

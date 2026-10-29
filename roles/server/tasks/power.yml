@@ -23,13 +23,16 @@
     - { src: power.env.j2, dest: power.env }
     - { src: clients.j2, dest: clients }
 
-- name: Install netstation-power
+- name: Install netstation-power and netstation-client-name
   ansible.builtin.copy:
-    src: netstation-power
-    dest: /usr/local/sbin/netstation-power
+    src: "{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
     owner: root
     group: root
     mode: "0755"
+  loop:
+    - netstation-power
+    - netstation-client-name
 
 - name: Install the power service
   ansible.builtin.template:

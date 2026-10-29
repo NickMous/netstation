@@ -171,13 +171,14 @@ offline that are switched on. DHCP reservations for the clients avoid that.
 
 PXE boot must be enabled in the BIOS/UEFI and Secure Boot disabled. A new
 client then works without any configuration. Add it to `netstation_clients`
-only to give it a fixed name, make it a test client, or give it its own
-settings:
+only to give it a fixed name, say who uses it, make it a test client, or
+give it its own settings:
 
 ```yaml
 netstation_clients:
   - mac: "d8:9e:f3:37:53:a1"
     hostname: reception01
+    person: Anna de Vries     # shown in alerts and by the clients playbook
 ```
 
 Then run the `server` playbook.

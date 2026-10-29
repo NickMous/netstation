@@ -97,10 +97,10 @@ the server sends Pushover alerts:
 | dnsmasq restarted / still hangs / works again | The dnsmasq watchdog (every 2 minutes) found dnsmasq hanging and restarted it |
 | Staging build ready to test | A staging build finished, with what changed compared with production |
 | Clients still on | At the `netstation_power_report` times, when any client is still on |
-| *person*: Remote Desktop crashed | xfreerdp3 crashed on a client (with a sound), with its last errors |
-| *person*: Remote Desktop error / can't connect / account blocked / password expired | xfreerdp3 stopped with an error (without a sound). Wrong passwords and normal disconnects aren't reported. |
+| *client*: Remote Desktop crashed | xfreerdp3 crashed on a client (with a sound), with its last errors |
+| *client*: Remote Desktop error / can't connect / account blocked / password expired | xfreerdp3 stopped with an error (without a sound). Wrong passwords and normal disconnects aren't reported. |
 
-Alerts about a client name it by `person` and `hostname` from
+Alerts about a client name it by `label` and `hostname` from
 `netstation_clients`, or by its hostname or IP address. A client sends at most
 one alert every 10 minutes (`netstation_alerts_client_quiet_minutes`); the
 others are only logged: `sudo journalctl -t netstation-client-report`.
@@ -178,14 +178,14 @@ offline that are switched on. DHCP reservations for the clients avoid that.
 
 PXE boot must be enabled in the BIOS/UEFI and Secure Boot disabled. A new
 client then works without any configuration. Add it to `netstation_clients`
-only to give it a fixed name, say who uses it, make it a test client, or
+only to give it a fixed name, label it, make it a test client, or
 give it its own settings:
 
 ```yaml
 netstation_clients:
   - mac: "d8:9e:f3:37:53:a1"
     hostname: reception01
-    person: Anna de Vries     # shown in alerts and by the clients playbook
+    label: Anna de Vries      # who or what it's for: shown in alerts and by the clients playbook
 ```
 
 Then run the `server` playbook.

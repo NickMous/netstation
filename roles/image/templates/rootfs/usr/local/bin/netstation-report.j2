@@ -1,7 +1,7 @@
 #!/bin/sh
 # {{ ansible_managed }}
 # Reports a problem on this client to the server, which sends it as a
-# Pushover alert with the name of the person who uses the client.
+# Pushover alert with the client's label and hostname.
 # Usage: netstation-report crash|error TITLE [DETAILS]   (DETAILS from stdin if left out)
 set -u
 

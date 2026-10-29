@@ -1,6 +1,6 @@
 #!/bin/sh
 # Sends the problems clients report (netstation-report, logged by nginx) as
-# alerts, with the person and hostname from netstation_clients. At most one
+# alerts, with the label and hostname from netstation_clients. At most one
 # alert per client every NETSTATION_ALERTS_CLIENT_QUIET_MINUTES; the others
 # only go to the journal. Started by netstation-client-reports.timer.
 set -u

@@ -1,5 +1,5 @@
 ---
-# The clients that are on right now: IP and MAC address, and the person and
+# The clients that are on right now: IP and MAC address, and the label and
 # hostname from netstation_clients when they have them. Changes nothing.
 - name: Show the clients that are on
   hosts: netstation_servers

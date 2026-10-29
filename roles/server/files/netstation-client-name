@@ -1,5 +1,5 @@
 #!/bin/sh
-# Prints a client's name from netstation_clients: "person (hostname)", or
+# Prints a client's name from netstation_clients: "label (hostname)", or
 # whichever of the two is set. Prints FALLBACK (or nothing) for unknown clients.
 # Usage: netstation-client-name MAC [FALLBACK]
 set -u

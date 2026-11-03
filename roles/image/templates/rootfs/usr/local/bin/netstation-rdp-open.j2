@@ -48,6 +48,15 @@ errors() {
         sed 's/^\[[^]]*\] \[[^]]*\] //' | tail -n 8
 }
 
+# On an X error (e.g. too much on the clipboard), Xlib prints it and exits
+# with code 1, which looks like a normal disconnect.
+if grep -q '^X Error of failed request' "$log"; then
+    result="x-error"
+    errors() {
+        sed -n '/^X Error of failed request/,$p' "$log" | head -n 8
+    }
+fi
+
 # Exit codes from FreeRDP's client/X11/xfreerdp.h.
 case $result in
 "exit 0" | "exit 1" | "exit 2" | "exit 3" | "exit 5" | "exit 11" | "exit 145")
@@ -62,6 +71,12 @@ signal*)
     kind=crash
     title="Remote Desktop crashed"
     problem="xfreerdp3 crashed (signal $code, $(kill -l "$code" 2>/dev/null || echo unknown))."
+    text=$msg_crashed
+    ;;
+x-error)
+    kind=crash
+    title="Remote Desktop crashed"
+    problem="xfreerdp3 crashed on an X error (exit code $code)."
     text=$msg_crashed
     ;;
 "exit 135" | "exit 151" | "exit 157")

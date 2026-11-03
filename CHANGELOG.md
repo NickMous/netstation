@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- When xfreerdp3 stops on an X error, such as `BadLength` after copying a lot
+  to the clipboard, the client reports it as a crash. Before, Xlib's exit
+  code 1 looked like a normal disconnect, so no alert came. Takes an image
+  build.
+
 ## 0.6.1 (2026-10-29)
 
 - Remote Desktop alerts include the message the user saw in the dialog, and

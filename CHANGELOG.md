@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.2 (2026-11-03)
 
 - When xfreerdp3 stops on an X error, such as `BadLength` after copying a lot
   to the clipboard, the client reports it as a crash. Before, Xlib's exit

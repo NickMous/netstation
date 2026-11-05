@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.3 (2026-11-05)
 
 - A screen switched on after the client started is put next to the others,
   not mirrored on top of them. Before, xfreerdp3 then refused to connect

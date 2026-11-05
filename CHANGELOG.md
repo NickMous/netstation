@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- A screen switched on after the client started is put next to the others,
+  not mirrored on top of them. Before, xfreerdp3 then refused to connect
+  (exit code 136, "pre-connect failed") until the client was restarted. The
+  new `netstation-displays` puts all connected screens side by side, left to
+  right in xrandr's output order with the first one primary, at login and on
+  every hotplug, and XFCE no longer acts on new screens or shows its display
+  dialog. `netstation_displays_side_by_side: false` turns it off. Takes an
+  image build.
+
 ## 0.6.2 (2026-11-03)
 
 - When xfreerdp3 stops on an X error, such as `BadLength` after copying a lot

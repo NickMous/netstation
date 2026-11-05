@@ -10,6 +10,7 @@ netstation_image_packages: >-
       + (['firefox-esr-l10n-' ~ netstation_firefox_language] if netstation_firefox_language | length > 0 else [])
       + (['xfce4-genmon-plugin'] if netstation_panel_show_address else [])
       + (['ethtool'] if netstation_wake_on_lan else [])
+      + (['x11-xserver-utils'] if netstation_displays_side_by_side else [])
       + (['plymouth', 'plymouth-themes'] if netstation_boot_splash else [])
       + (['cups-daemon', 'ipp-usb', 'avahi-daemon'] if netstation_rdp_printers else [])
       + (['xprintidle'] if netstation_idle_logout_minutes | int > 0 or netstation_power_off | length > 0 else [])
@@ -30,6 +31,13 @@ netstation_rootfs_templates:
   - dest: etc/xdg/autostart/netstation-browser.desktop
   - dest: etc/xdg/autostart/netstation-numlock.desktop
     when: "{{ netstation_numlock }}"
+  - dest: etc/xdg/autostart/netstation-displays.desktop
+    when: "{{ netstation_displays_side_by_side }}"
+  - dest: usr/local/bin/netstation-displays
+    mode: "0755"
+    when: "{{ netstation_displays_side_by_side }}"
+  - dest: etc/xdg/xfce4/xfconf/xfce-perchannel-xml/displays.xml
+    when: "{{ netstation_displays_side_by_side }}"
   - dest: etc/xdg/mimeapps.list
   - dest: etc/systemd/timesyncd.conf.d/netstation.conf
     when: "{{ netstation_ntp_servers | length > 0 }}"

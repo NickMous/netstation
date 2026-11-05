@@ -1,0 +1,47 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# Puts all connected screens side by side, left to right in xrandr's output
+# order, with the first one primary at 0x0. Runs at login and again whenever a
+# screen is connected or disconnected, e.g. switched on after the client
+# booted. Without it a screen that comes on later is mirrored at 0x0, and
+# xfreerdp3 refuses overlapping monitors (exit code 136).
+set -u
+
+# "NAME connected|disconnected" per output.
+outputs() {
+    xrandr --current 2>/dev/null |
+        awk '$2 == "connected" || $2 == "disconnected" { print $1, $2 }'
+}
+
+arrange() {
+    local name state previous="" args=()
+    while read -r name state; do
+        if [ "$state" != connected ]; then
+            args+=(--output "$name" --off)
+        elif [ -z "$previous" ]; then
+            args+=(--output "$name" --auto --primary --pos 0x0)
+            previous=$name
+        else
+            args+=(--output "$name" --auto --right-of "$previous")
+            previous=$name
+        fi
+    done <<<"$1"
+    [ -n "$previous" ] || return 0
+    if xrandr "${args[@]}"; then
+        logger -t netstation-displays -- "Arranged: $(echo $(grep ' connected$' <<<"$1" | cut -d' ' -f1))"
+    else
+        logger -t netstation-displays -- "xrandr ${args[*]} failed"
+    fi
+}
+
+# The X server sees a hotplug by itself; xrandr --current only reads what it
+# knows, without probing the screens again.
+last=""
+while :; do
+    now=$(outputs)
+    if [ -n "$now" ] && [ "$now" != "$last" ]; then
+        arrange "$now"
+        last=$now
+    fi
+    sleep 2
+done

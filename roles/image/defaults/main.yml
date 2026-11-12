@@ -145,6 +145,10 @@ netstation_image_packages_desktop:
   - fonts-dejavu-core
   - desktop-base
   - pipewire-audio
+  # Volume icon in the panel (also makes the keyboard's volume keys work),
+  # and the mixer it opens to pick the output device.
+  - xfce4-pulseaudio-plugin
+  - pavucontrol
   - numlockx
   - xdg-utils
   - shared-mime-info

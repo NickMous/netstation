@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- {{ ansible_managed }}
-     Debian's default XFCE panel, plus the client's name and address
-     (plugin 19) next to the clock. -->
+     Debian's default XFCE panel without the workspace switcher, plus a
+     volume control (plugin 20) and, with netstation_panel_show_address, the
+     client's name and address (plugin 19) next to the clock. -->
 
 <channel name="xfce4-panel" version="1.0">
   <property name="configver" type="int" value="2"/>
@@ -19,10 +20,12 @@
         <value type="int" value="1"/>
         <value type="int" value="2"/>
         <value type="int" value="3"/>
-        <value type="int" value="4"/>
         <value type="int" value="5"/>
         <value type="int" value="6"/>
+        <value type="int" value="20"/>
+{% if netstation_panel_show_address %}
         <value type="int" value="19"/>
+{% endif %}
         <value type="int" value="7"/>
         <value type="int" value="8"/>
         <value type="int" value="9"/>
@@ -56,7 +59,6 @@
       <property name="expand" type="bool" value="true"/>
       <property name="style" type="uint" value="0"/>
     </property>
-    <property name="plugin-4" type="string" value="pager"/>
     <property name="plugin-5" type="string" value="separator">
         <property name="style" type="uint" value="0"/>
     </property>
@@ -95,6 +97,12 @@
     </property>
     <property name="plugin-17" type="string" value="separator"/>
     <property name="plugin-18" type="string" value="directorymenu"/>
+{% if netstation_panel_show_address %}
     <property name="plugin-19" type="string" value="genmon"/>
+{% endif %}
+    <property name="plugin-20" type="string" value="pulseaudio">
+      <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
+      <property name="mixer-command" type="string" value="pavucontrol"/>
+    </property>
   </property>
 </channel>

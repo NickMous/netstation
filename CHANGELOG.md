@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- The panel has a volume icon (`xfce4-pulseaudio-plugin`) with a slider and
+  mute, and the keyboard's volume keys work. Its mixer, `pavucontrol`, picks
+  the output device, such as the monitor's speakers or the headphone jack.
+  The workspace switcher is gone from the panel. The panel layout is now
+  also used with `netstation_panel_show_address: false`, without the address.
+  Takes an image build.
+
 ## 0.7.0 (2026-11-12)
 
 - A client in `netstation_clients` can have its own wake times (`wake`),

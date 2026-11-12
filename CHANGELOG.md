@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 (2026-11-12)
 
 - A client in `netstation_clients` can have its own wake times (`wake`),
   e.g. earlier or also on Saturday. They replace `netstation_power_wake` for

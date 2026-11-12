@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.0 (2026-11-12)
 
 - The new `mac_handout` playbook writes a handout for Remote Mac users to
   `build/mac-handout/`: a manual and a setup script, with nothing secret in

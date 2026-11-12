@@ -39,6 +39,8 @@ netstation_rootfs_templates:
   - dest: etc/xdg/xfce4/xfconf/xfce-perchannel-xml/displays.xml
     when: "{{ netstation_displays_side_by_side }}"
   - dest: etc/xdg/mimeapps.list
+  - dest: etc/wireplumber/wireplumber.conf.d/50-netstation-volume.conf
+    when: "{{ netstation_audio_volume | default('', true) | string | length > 0 }}"
   - dest: etc/systemd/timesyncd.conf.d/netstation.conf
     when: "{{ netstation_ntp_servers | length > 0 }}"
   - dest: etc/xdg/xfce4/panel/default.xml

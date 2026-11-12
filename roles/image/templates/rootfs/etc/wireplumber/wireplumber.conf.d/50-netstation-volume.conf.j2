@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# Volume of new outputs: {{ netstation_audio_volume }}%. WirePlumber's volume
+# is linear; the panel shows its cube root as the percentage.
+wireplumber.settings = {
+  device.routes.default-sink-volume = {{ '%.6f' | format(((netstation_audio_volume | float) / 100) ** 3) }}
+}

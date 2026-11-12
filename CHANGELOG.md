@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- The client's speakers and headphones start at 100% at every login, so the
+  Remote Desktop session's volume control alone sets how loud it is. Before,
+  they started at WirePlumber's 40%, and changes on the panel were lost at
+  logout with the fresh home folder. `netstation_audio_volume` sets the
+  percentage; empty keeps WirePlumber's default. Takes an image build.
+
 ## 0.7.1 (2026-11-12)
 
 - The panel has a volume icon (`xfce4-pulseaudio-plugin`) with a slider and

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- The new `mac_handout` playbook writes a handout for Remote Mac users to
+  `build/mac-handout/`: a manual and a setup script, with nothing secret in
+  them. The script installs RustDesk and SimpleDisplay on the Mac, sets the
+  RustDesk server and its key, walks the user through the permissions only
+  they can give, and adds an office mode app that switches virtual screens
+  for the client on, keeping the Mac awake, and back off. The manual's template, the texts and the screens are settings.
+
 ## 0.8.0 (2026-11-12)
 
 - **Remote Mac** (`netstation_remote_mac_enabled`): people control their own

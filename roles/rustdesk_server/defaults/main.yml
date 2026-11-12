@@ -12,3 +12,74 @@ netstation_rustdesk_server_checksums:
 # setting up every Mac again. Empty: the server makes one on its first start;
 # copy it into the vault afterwards (the server playbook says how).
 netstation_rustdesk_private_key: ""
+
+# --- Mac handout (mac_handout playbook) ------------------------------------
+# The mac_handout playbook writes a setup script and a manual for the Mac
+# users to netstation_mac_handout_dir on your machine. Hand them out; the
+# Mac users need no access to the server or the vault.
+
+# The apps the setup script installs on the Mac, from their GitHub releases.
+# Change a version deliberately, with the checksums from its release page.
+netstation_mac_rustdesk_version: "1.5.3"
+netstation_mac_rustdesk_checksums:
+  aarch64: sha256:e6d30fa1633d772c48935907c208ca4e555a856fb2038af3aaa87a327c29360b
+  x86_64: sha256:74d06e6b2e273a128e8d36313e30d47db2063f453a4235ed4d9e5cdfdf9be538
+# SimpleDisplay makes the virtual screens for office mode (macOS 14 or newer).
+netstation_mac_simpledisplay_version: "1.6.6"
+netstation_mac_simpledisplay_checksum: sha256:f97284e24c51a6ab11c0a3b9069d13077278651f6302273ea31d39fbd5de2158
+
+netstation_mac_handout_dir: "{{ inventory_dir }}/../build/mac-handout"
+netstation_mac_handout_script_name: setup-mac.sh
+netstation_mac_handout_manual_name: Remote Mac manual.html
+# The manual's template: this role's English one, or your own (a path), e.g.
+# in another language. It gets the same variables as mac-manual.html.j2.
+netstation_mac_handout_manual_template: mac-manual.html.j2
+
+# Office mode: an app the setup script puts in Applications. Clicked once, it
+# adds these virtual screens and keeps the Mac awake; clicked again, it
+# removes them. RustDesk shows as many Mac screens as the client has, starting
+# with the Mac's main screen (usually its own).
+netstation_mac_office_mode_name: Office mode
+netstation_mac_office_displays:
+  - { name: Desk left, width: 1920, height: 1080 }
+  - { name: Desk right, width: 1920, height: 1080 }
+# Also switch the Mac's own screen off in office mode, so the client shows
+# only the virtual screens. Off, the Mac's own screen stays usable, and
+# usually takes the client's first screen.
+netstation_mac_office_builtin_off: false
+
+# What the setup script and office mode say. Set all of them when you change
+# one.
+netstation_mac_handout_messages:
+  intro: This sets up your Mac so you can use it from the office PCs. It takes a few minutes.
+  old_macos: This needs macOS 14 or newer. Update your Mac first, then run this again.
+  password: "Your Mac asks for your password: the one you log in to your Mac with. You don't see it while you type."
+  download: Downloading
+  install: Installing
+  up_to_date: is up to date
+  configure: Setting up RustDesk
+  rustdesk_install: >-
+    RustDesk opens. In its sidebar, click Install and enter your password.
+    That starts RustDesk in the background whenever your Mac starts, so the
+    office PC can reach your Mac without opening RustDesk first, also when
+    your Mac is locked.
+  rustdesk_install_skip: >-
+    This continues by itself once that's done. Don't want it? Press Enter;
+    then open RustDesk yourself before you use your Mac from the office PC.
+  permissions: >-
+    In RustDesk's window, click the buttons for Screen Recording and
+    Accessibility. In System Settings, switch RustDesk on in both lists.
+  press_enter: Press Enter when that's done.
+  done: "Done. Your RustDesk ID is:"
+  id_unknown: Your RustDesk ID is in RustDesk's window.
+  office_mode: "Before you use your Mac from an office PC, open {{ netstation_mac_office_mode_name }} in Applications."
+  confirm: >-
+    {{ netstation_mac_office_mode_name }} adds the screens for the office PC
+    and keeps your Mac awake. Open {{ netstation_mac_office_mode_name }} again
+    to switch it off.
+  switch_on: Switch on
+  cancel: Cancel
+  is_on: "On: use your Mac from the office PC."
+  is_off: "Off: the office screens are gone."
+  missing: SimpleDisplay is missing. Run the setup script again.
+  no_answer: SimpleDisplay didn't do what was asked. Try again; if it keeps happening, tell IT.

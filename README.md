@@ -50,6 +50,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 | `nickmous.netstation.clients` | The clients that are on: IP, MAC and name |
 | `nickmous.netstation.wake` | Wake clients with Wake-on-LAN |
 | `nickmous.netstation.veyon_computers` | Write the booted clients to a CSV file for Veyon Master |
+| `nickmous.netstation.mac_handout` | Write the setup script and manual for Remote Mac users |
 
 On the server, the same actions are available as `sudo netstation-image
 build|diff|promote|rollback|status`.
@@ -124,7 +125,8 @@ Every variable is documented, with its default, in `roles/*/defaults/main.yml`:
 - `roles/installer/defaults/main.yml`: admin account, network settings and
   extra network cards for the installed server
 - `roles/alerts/defaults/main.yml`: Pushover keys and what to alert on
-- `roles/rustdesk_server/defaults/main.yml`: RustDesk server version and key
+- `roles/rustdesk_server/defaults/main.yml`: RustDesk server version and key,
+  the Mac handout and office mode
 - `roles/wireguard/defaults/main.yml` and `roles/cockpit/defaults/main.yml`
 
 All variables share the `netstation_` prefix, so you can set them in one

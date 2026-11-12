@@ -1,0 +1,55 @@
+---
+# The setup script and manual for the Mac users (mac_handout playbook).
+- name: Check that Remote Mac is on
+  ansible.builtin.assert:
+    that: netstation_remote_mac_enabled
+    fail_msg: Remote Mac is off; set netstation_remote_mac_enabled first.
+    quiet: true
+
+# Only the public key: the handout has nothing secret in it.
+- name: Read the RustDesk server's public key
+  ansible.builtin.slurp:
+    src: /var/lib/rustdesk-server/id_ed25519.pub
+  register: netstation_rustdesk_public_key_file
+  failed_when: false
+
+- name: Check that the RustDesk server is set up
+  ansible.builtin.assert:
+    that: netstation_rustdesk_public_key_file.content is defined
+    fail_msg: The RustDesk server isn't set up yet; run the server playbook first.
+    quiet: true
+
+- name: Remember the public key
+  ansible.builtin.set_fact:
+    netstation_rustdesk_public_key: "{{ netstation_rustdesk_public_key_file.content | b64decode | trim }}"
+
+- name: Write the handout on this machine
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Create the handout folder
+      ansible.builtin.file:
+        path: "{{ netstation_mac_handout_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Write the setup script
+      ansible.builtin.template:
+        src: mac/setup-mac.sh.j2
+        dest: "{{ netstation_mac_handout_dir }}/{{ netstation_mac_handout_script_name }}"
+        mode: "0755"
+
+    - name: Write the manual
+      ansible.builtin.template:
+        src: "{{ ('mac/' ~ netstation_mac_handout_manual_template) if '/' not in netstation_mac_handout_manual_template
+                 else netstation_mac_handout_manual_template }}"
+        dest: "{{ netstation_mac_handout_dir }}/{{ netstation_mac_handout_manual_name }}"
+        mode: "0644"
+
+- name: Show where the handout is
+  ansible.builtin.debug:
+    msg:
+      - "The handout for the Mac users is in {{ netstation_mac_handout_dir | realpath }}:"
+      - "  {{ netstation_mac_handout_manual_name }}: the manual; open it in a browser, print it or save it as PDF"
+      - "  {{ netstation_mac_handout_script_name }}: the setup script the manual explains"
+      - "Nothing in it is secret. Make it again after changing a version or the server's key."

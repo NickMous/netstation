@@ -1,0 +1,209 @@
+// {{ netstation_mac_office_mode_name }}: switches the screens for the office PC on and off with
+// SimpleDisplay. On: a virtual screen per office PC screen, and the Mac's own
+// screen off, so RustDesk shows exactly these; the Mac stays awake, so the
+// office PC can reach it. Off: the other way around.
+// Made by the netstation setup script for Remote Mac.
+ObjC.import("Foundation");
+
+var CFG = {{ {
+    'title': netstation_mac_office_mode_name,
+    'displays': netstation_mac_office_displays,
+    'builtinOff': netstation_mac_office_builtin_off,
+    'text': {
+        'confirm': netstation_mac_handout_messages.confirm | trim,
+        'switchOn': netstation_mac_handout_messages.switch_on,
+        'cancel': netstation_mac_handout_messages.cancel,
+        'on': netstation_mac_handout_messages.is_on,
+        'off': netstation_mac_handout_messages.is_off,
+        'missing': netstation_mac_handout_messages.missing,
+        'noAnswer': netstation_mac_handout_messages.no_answer,
+    },
+} | to_json }};
+
+var app = Application.currentApplication();
+app.includeStandardAdditions = true;
+
+var STATUS = "/tmp/simpledisplay-status.json";
+var STATE_DIR = $.NSHomeDirectory().js + "/Library/Application Support/netstation-office-mode";
+// The Mac's own screen that office mode switched off, to switch it on again.
+var STATE = STATE_DIR + "/builtin-id";
+// The caffeinate that keeps the Mac awake while office mode is on.
+var AWAKE = STATE_DIR + "/caffeinate-pid";
+
+function q(s) {
+    return "'" + String(s).replace(/'/g, "'\\''") + "'";
+}
+
+function sh(command) {
+    return app.doShellScript(command);
+}
+
+function readFile(path) {
+    var text = $.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, null);
+    return text.isNil() ? null : text.js;
+}
+
+function url(command, params) {
+    var query = Object.keys(params || {}).map(function (k) {
+        return k + "=" + encodeURIComponent(params[k]);
+    }).join("&");
+    return "simpledisplay://" + command + (query ? "?" + query : "");
+}
+
+// Sends SimpleDisplay a command. It ignores the same command twice within a
+// second, and a create, remove, enable or disable while it's still busy with
+// the previous one: see step().
+function send(command, params) {
+    sh("open -g " + q(url(command, params)));
+}
+
+// Starts SimpleDisplay if it isn't running: commands sent while it starts
+// can get lost.
+function startSimpleDisplay() {
+    if (sh("pgrep -x SimpleDisplay >/dev/null && echo yes || echo no") === "yes") {
+        return;
+    }
+    sh("open -g -a SimpleDisplay");
+    for (var i = 0; i < 50 && sh("pgrep -x SimpleDisplay >/dev/null && echo yes || echo no") !== "yes"; i++) {
+        delay(0.2);
+    }
+    delay(2);
+}
+
+// SimpleDisplay's list of screens. Asks again every 1.5 seconds, in case it
+// missed the question.
+function screens() {
+    sh("rm -f " + q(STATUS));
+    for (var i = 0; i < 300; i++) {
+        if (i % 15 === 0) {
+            send("status");
+        }
+        var text = readFile(STATUS);
+        if (text) {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                // Still being written.
+            }
+        }
+        delay(0.1);
+    }
+    throw new Error("SimpleDisplay didn't answer.");
+}
+
+// Sends a command and waits until done(list of screens) says it happened,
+// sending it again every few seconds in case SimpleDisplay was busy.
+function step(command, params, done) {
+    for (var attempt = 0; attempt < 8; attempt++) {
+        send(command, params);
+        for (var i = 0; i < 4; i++) {
+            delay(1);
+            if (done(screens())) {
+                return;
+            }
+        }
+    }
+    throw new Error("SimpleDisplay didn't do: " + url(command, params));
+}
+
+function names() {
+    return CFG.displays.map(function (d) { return d.name; });
+}
+
+function officeScreens(list) {
+    return list.filter(function (d) { return d.virtual && names().indexOf(d.name) >= 0; });
+}
+
+function hasScreen(name) {
+    return function (list) {
+        return list.some(function (d) { return d.virtual && d.name === name && d.on; });
+    };
+}
+
+function lacksScreen(name) {
+    return function (list) {
+        return !list.some(function (d) { return d.virtual && d.name === name; });
+    };
+}
+
+function builtinOn(list) {
+    return list.some(function (d) { return d.builtin && d.on; });
+}
+
+function notify(text) {
+    app.displayNotification(text, { withTitle: CFG.title });
+}
+
+function switchOn() {
+    try {
+        app.displayDialog(CFG.text.confirm, {
+            withTitle: CFG.title,
+            buttons: [CFG.text.cancel, CFG.text.switchOn],
+            defaultButton: CFG.text.switchOn,
+            cancelButton: CFG.text.cancel,
+            withIcon: "caution",
+        });
+    } catch (e) {
+        return;
+    }
+    // One at a time: SimpleDisplay ignores a create while it's busy.
+    CFG.displays.forEach(function (d) {
+        if (!hasScreen(d.name)(screens())) {
+            step("create", { width: d.width, height: d.height, name: d.name }, hasScreen(d.name));
+        }
+    });
+    // Only once the office screens are there, so there's always a screen on.
+    if (CFG.builtinOff) {
+        screens().filter(function (d) { return d.builtin && d.on; }).forEach(function (d) {
+            sh("mkdir -p " + q(STATE_DIR) + " && echo " + d.id + " > " + q(STATE));
+            step("disable", { id: d.id, headless: "true" }, function (l) {
+                return !l.some(function (x) { return x.id === d.id && x.on; });
+            });
+        });
+    }
+    // Only caffeinate in the background, with all its input and output
+    // elsewhere: do shell script waits for anything that still holds its output.
+    sh("mkdir -p " + q(STATE_DIR));
+    sh("/usr/bin/caffeinate -i </dev/null >/dev/null 2>&1 & echo $! > " + q(AWAKE));
+    notify(CFG.text.on);
+}
+
+// No questions asked: this must also work without seeing the screen.
+function switchOff() {
+    var list = screens();
+    var saved = readFile(STATE);
+    var ids = list.filter(function (d) { return d.builtin && !d.on; }).map(function (d) { return d.id; });
+    if (saved && ids.indexOf(parseInt(saved, 10)) < 0) {
+        ids.push(parseInt(saved, 10));
+    }
+    // The Mac's own screen first, so there's always a screen on.
+    ids.forEach(function (id) {
+        step("enable", { id: id }, builtinOn);
+    });
+    sh("rm -f " + q(STATE));
+    var awake = readFile(AWAKE);
+    if (awake) {
+        sh("kill " + parseInt(awake, 10) + " 2>/dev/null; rm -f " + q(AWAKE));
+    }
+    officeScreens(list).forEach(function (d) {
+        step("remove", { name: d.name }, lacksScreen(d.name));
+    });
+    notify(CFG.text.off);
+}
+
+function run() {
+    if (!$.NSFileManager.defaultManager.fileExistsAtPath("/Applications/SimpleDisplay.app")) {
+        app.displayAlert(CFG.title, { message: CFG.text.missing, as: "critical" });
+        return;
+    }
+    try {
+        startSimpleDisplay();
+        if (officeScreens(screens()).length > 0 || readFile(STATE) || readFile(AWAKE)) {
+            switchOff();
+        } else {
+            switchOn();
+        }
+    } catch (e) {
+        app.displayAlert(CFG.title, { message: CFG.text.noAnswer + "\n\n" + e.message, as: "critical" });
+    }
+}

@@ -1,0 +1,194 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# Sets up this Mac for Remote Mac: using it from the netstation clients with
+# RustDesk. Installs RustDesk and SimpleDisplay, points RustDesk at the
+# netstation RustDesk server, and adds the {{ netstation_mac_office_mode_name }} app. Run it in
+# Terminal with: bash {{ netstation_mac_handout_script_name }}
+# Running it again updates the apps and the settings.
+# macOS ships bash 3.2: no bash 4 features below.
+set -euo pipefail
+
+SERVER={{ netstation_remote_mac_server_address | quote }}
+KEY={{ netstation_rustdesk_public_key | quote }}
+
+RUSTDESK_VERSION={{ netstation_mac_rustdesk_version | quote }}
+RUSTDESK_SHA256_aarch64={{ netstation_mac_rustdesk_checksums.aarch64 | regex_replace('^sha256:', '') | quote }}
+RUSTDESK_SHA256_x86_64={{ netstation_mac_rustdesk_checksums.x86_64 | regex_replace('^sha256:', '') | quote }}
+SIMPLEDISPLAY_VERSION={{ netstation_mac_simpledisplay_version | quote }}
+SIMPLEDISPLAY_SHA256={{ netstation_mac_simpledisplay_checksum | regex_replace('^sha256:', '') | quote }}
+
+OFFICE_APP={{ ('/Applications/' ~ netstation_mac_office_mode_name ~ '.app') | quote }}
+
+{% for key in ['intro', 'old_macos', 'password', 'download', 'install', 'up_to_date', 'configure', 'rustdesk_install', 'rustdesk_install_skip', 'permissions', 'press_enter', 'done', 'id_unknown', 'office_mode'] %}
+msg_{{ key }}={{ netstation_mac_handout_messages[key] | trim | quote }}
+{% endfor %}
+
+RUSTDESK_APP=/Applications/RustDesk.app
+RUSTDESK_BIN=$RUSTDESK_APP/Contents/MacOS/RustDesk
+DAEMON_PLIST=/Library/LaunchDaemons/com.carriez.RustDesk_service.plist
+USER_CONF=$HOME/Library/Preferences/com.carriez.RustDesk/RustDesk2.toml
+ROOT_CONF=/var/root/Library/Preferences/com.carriez.RustDesk/RustDesk2.toml
+
+step() {
+    printf '\n\033[1m==> %s\033[0m\n' "$1"
+}
+
+fail() {
+    printf '\n\033[31m%s\033[0m\n' "$1" >&2
+    exit 1
+}
+
+pause() {
+    printf '\n%s ' "$msg_press_enter"
+    read -r _ </dev/tty || true
+}
+
+tmp=$(mktemp -d)
+cleanup() {
+    for mount in "$tmp"/mnt-*; do
+        [ -d "$mount" ] && hdiutil detach -quiet "$mount" 2>/dev/null
+    done
+    rm -rf "$tmp"
+    [ -z "${sudo_keepalive:-}" ] || kill "$sudo_keepalive" 2>/dev/null
+}
+trap cleanup EXIT
+
+[ "$(uname -s)" = Darwin ] || fail "This script is for macOS."
+[ "$(sw_vers -productVersion | cut -d. -f1)" -ge 14 ] || fail "$msg_old_macos"
+# Also right under Rosetta, where uname -m says x86_64 on Apple silicon.
+if [ "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" = 1 ]; then
+    arch=aarch64
+    rustdesk_sha256=$RUSTDESK_SHA256_aarch64
+else
+    arch=x86_64
+    rustdesk_sha256=$RUSTDESK_SHA256_x86_64
+fi
+
+printf '\033[1m%s\033[0m\n' "$msg_intro"
+
+step "$msg_password"
+sudo -v
+# Keep sudo's password for the whole run, which can take longer than its
+# five minutes.
+while sleep 50; do sudo -n true 2>/dev/null || exit; kill -0 $$ 2>/dev/null || exit; done &
+sudo_keepalive=$!
+
+version_of() {
+    defaults read "$1/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || true
+}
+
+# install_app NAME VERSION URL SHA256: installs NAME.app from a disk image in
+# Applications, unless that version is there already.
+install_app() {
+    local name=$1 version=$2 url=$3 sha256=$4
+    local app=/Applications/$name.app dmg=$tmp/$name.dmg mount=$tmp/mnt-$name
+    if [ "$(version_of "$app")" = "$version" ]; then
+        echo "$name $version $msg_up_to_date"
+        return 0
+    fi
+    step "$msg_download $name $version"
+    curl -fL --progress-bar -o "$dmg" "$url"
+    echo "$sha256  $dmg" | shasum -a 256 -c - >/dev/null ||
+        fail "$name: the download is damaged or not the expected version. Try again."
+    step "$msg_install $name $version"
+    mkdir -p "$mount"
+    hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$mount" "$dmg" >/dev/null 2>&1
+    osascript -e "quit app \"$name\"" >/dev/null 2>&1 || true
+    sleep 1
+    sudo rm -rf "$app"
+    sudo ditto "$mount/$name.app" "$app"
+    hdiutil detach -quiet "$mount"
+}
+
+install_app RustDesk "$RUSTDESK_VERSION" \
+    "https://github.com/rustdesk/rustdesk/releases/download/$RUSTDESK_VERSION/rustdesk-$RUSTDESK_VERSION-$arch.dmg" \
+    "$rustdesk_sha256"
+install_app SimpleDisplay "$SIMPLEDISPLAY_VERSION" \
+    "https://github.com/SamuelRioTz/SimpleDisplay/releases/download/v$SIMPLEDISPLAY_VERSION/SimpleDisplay.dmg" \
+    "$SIMPLEDISPLAY_SHA256"
+
+# Sets the server and key in a RustDesk2.toml read from stdin, keeping the
+# rest of the file.
+rustdesk_options() {
+    awk -v server="$SERVER" -v key="$KEY" '
+        BEGIN {
+            n = split("custom-rendezvous-server relay-server key", names, " ")
+            values["custom-rendezvous-server"] = server
+            values["relay-server"] = server
+            values["key"] = key
+        }
+        function emit(i) {
+            for (i = 1; i <= n; i++) printf "%s = '"'"'%s'"'"'\n", names[i], values[names[i]]
+        }
+        /^\[/ { section = $0 }
+        section == "[options]" {
+            for (i = 1; i <= n; i++) if (index($0, names[i] " = ") == 1) next
+        }
+        { print }
+        $0 == "[options]" { emit(); found = 1 }
+        END { if (!found) { print ""; print "[options]"; emit() } }'
+}
+
+step "$msg_configure"
+osascript -e 'quit app "RustDesk"' >/dev/null 2>&1 || true
+sleep 1
+# RustDesk's service copies this file when it's installed.
+mkdir -p "$(dirname "$USER_CONF")"
+{ cat "$USER_CONF" 2>/dev/null || true; } | rustdesk_options >"$tmp/user.toml"
+cp "$tmp/user.toml" "$USER_CONF"
+# Installed before: the service has its own copy.
+if [ -f "$DAEMON_PLIST" ]; then
+    sudo mkdir -p "$(dirname "$ROOT_CONF")"
+    { sudo cat "$ROOT_CONF" 2>/dev/null || true; } | rustdesk_options >"$tmp/root.toml"
+    sudo cp "$tmp/root.toml" "$ROOT_CONF"
+    sudo launchctl kickstart -k system/com.carriez.RustDesk_service >/dev/null 2>&1 || true
+fi
+open -a RustDesk
+
+if [ ! -f "$DAEMON_PLIST" ]; then
+    step "$msg_rustdesk_install"
+    printf '%s\n' "$msg_rustdesk_install_skip"
+    # Until the service is there, or the user presses Enter to skip it.
+    until [ -f "$DAEMON_PLIST" ]; do
+        if read -r -t 2 _ </dev/tty; then
+            break
+        fi
+    done
+fi
+
+step "$msg_permissions"
+open "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
+pause
+open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+pause
+# RustDesk only sees new permissions after a restart.
+osascript -e 'quit app "RustDesk"' >/dev/null 2>&1 || true
+sleep 2
+open -a RustDesk
+
+step "{{ netstation_mac_office_mode_name }}"
+cat >"$tmp/office-mode.js" <<'OFFICE_MODE'
+{% include 'office-mode.js.j2' %}
+
+OFFICE_MODE
+osacompile -l JavaScript -o "$tmp/office-mode.app" "$tmp/office-mode.js"
+sudo rm -rf "$OFFICE_APP"
+sudo ditto "$tmp/office-mode.app" "$OFFICE_APP"
+echo "$OFFICE_APP"
+
+id=""
+for _ in $(seq 15); do
+    id=$("$RUSTDESK_BIN" --get-id 2>/dev/null | tail -n 1 | tr -d '[:space:]') || true
+    case $id in
+    "" | *[!0-9]*) id="" ;;
+    *) break ;;
+    esac
+    sleep 2
+done
+
+if [ -n "$id" ]; then
+    step "$msg_done $id"
+else
+    step "$msg_id_unknown"
+fi
+echo "$msg_office_mode"

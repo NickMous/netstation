@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- {{ ansible_managed }} -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using your Mac from the office PCs</title>
+<style>
+  :root { --text: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --accent: #0066cc; --box: #f5f5f7; }
+  body { font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+         color: var(--text); max-width: 46rem; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.9rem; margin-bottom: .2rem; }
+  h2 { font-size: 1.3rem; margin-top: 2.2rem; border-bottom: 1px solid var(--line); padding-bottom: .3rem; }
+  .lead { color: var(--muted); margin-top: 0; }
+  ol li, ul li { margin: .35rem 0; }
+  code, kbd { font: .92em ui-monospace, Menlo, monospace; background: var(--box);
+              border: 1px solid var(--line); border-radius: 4px; padding: .05rem .3rem; }
+  pre { background: var(--box); border: 1px solid var(--line); border-radius: 6px; padding: .7rem 1rem;
+        overflow-x: auto; font: .95em ui-monospace, Menlo, monospace; }
+  .note { background: var(--box); border-left: 4px solid var(--accent); padding: .6rem 1rem; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; }
+  td { border-top: 1px solid var(--line); padding: .5rem .4rem; vertical-align: top; }
+  td:first-child { font-weight: 600; width: 38%; }
+  @media print { body { margin: 0; } h2 { break-after: avoid; } .note, pre, tr { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<h1>Using your Mac from the office PCs</h1>
+<p class="lead">At any office PC, its keyboard, mouse and screens work your own Mac, wherever it is
+in the office. You no longer need to bring a screen, keyboard or cables.</p>
+
+<h2>Setting up (once)</h2>
+<p>You need: a Mac with macOS 14 or newer, its password, and the office network. You get two
+files: this manual and <code>{{ netstation_mac_handout_script_name }}</code>.</p>
+<ol>
+  <li>Save <code>{{ netstation_mac_handout_script_name }}</code> in your <strong>Downloads</strong> folder.</li>
+  <li>Open <strong>Terminal</strong> (Cmd+Space, type <em>Terminal</em>, press Enter). iTerm or another
+    terminal app works too.</li>
+  <li>Type this and press Enter:
+    <pre>bash ~/Downloads/{{ netstation_mac_handout_script_name }}</pre></li>
+  <li>Do what it says. It asks for your Mac's password once; you don't see it while you type.
+    <ul>
+      <li>When RustDesk opens, click <strong>Install</strong> in its sidebar and enter your password. RustDesk then
+        runs in the background whenever your Mac starts, so the office PC can reach your Mac without opening
+        RustDesk first, also when it's locked. Rather not? Press Enter in the terminal to skip it, and open RustDesk
+        yourself before you use your Mac from the office PC.</li>
+      <li>In RustDesk, click the buttons for <strong>Screen Recording</strong> and <strong>Accessibility</strong>,
+        and switch RustDesk on in both lists in System Settings. Press Enter in the terminal after each one.</li>
+    </ul></li>
+  <li>At the end it shows your <strong>RustDesk ID</strong>, nine digits: you type it at the office PC. No need to
+    remember it; it's always in RustDesk's window.</li>
+</ol>
+<p class="note">Got a new version of the script? Run it again the same way. It updates the apps and
+keeps your settings.</p>
+
+<h2>Every day</h2>
+<ol>
+  <li>On your Mac, open <strong>{{ netstation_mac_office_mode_name }}</strong> (Cmd+Space, type
+    <em>{{ netstation_mac_office_mode_name }}</em>, press Enter) and click <em>{{ netstation_mac_handout_messages.switch_on }}</em>.
+    {% if netstation_mac_office_builtin_off %}Your Mac's own screen goes dark: you now see it on the office PC.{% else %}Your Mac's
+    own screen stays on; the office PC usually shows it on its left screen.{% endif %}</li>
+  <li>At the office PC, double-click the <strong>{{ netstation_remote_mac_icon_name | default('Mac') }}</strong> icon on the desktop and type your RustDesk ID.
+    It's in RustDesk's window on your Mac.</li>
+  <li>Allow the connection, in either of two ways; follow what your Mac or the office PC shows:
+    <ul>
+      <li>on your Mac, click <strong>Accept</strong> in RustDesk, or</li>
+      <li>at the office PC, type the password RustDesk shows on your Mac. It changes after each session.</li>
+    </ul></li>
+</ol>
+<p>While {{ netstation_mac_office_mode_name }} is on, your Mac stays awake. macOS then lists
+{{ netstation_mac_office_mode_name }} as an app running in the background; that's right, and it also tells you
+it's still on. Keep it on the office network.
+With the charger connected you can close the lid once you're connected: your Mac keeps working, and the
+office PC then shows exactly the two office screens. If the connection drops, open the lid briefly to allow
+it again; with the lid closed you can't see the password or the Accept button.</p>
+<p>On the office PC, the key next to the space bar works as <kbd>Cmd</kbd>, as on a Mac keyboard.
+To stop, close the RustDesk windows with the small bar at the top of the screen.</p>
+<p>When you leave, or at home: open <strong>{{ netstation_mac_office_mode_name }}</strong> again. It switches the
+office screens off{% if netstation_mac_office_builtin_off %} and your Mac's own screen back on{% endif %}.</p>
+{% if netstation_mac_office_builtin_off %}
+<p class="note">Your Mac's screen stays dark and you can't see it? Press <kbd>Cmd</kbd>+<kbd>Space</kbd>,
+type <em>{{ netstation_mac_office_mode_name }}</em> and press <kbd>Enter</kbd>.</p>
+{% endif %}
+
+<h2>If something doesn't work</h2>
+<table>
+  <tr><td>You see your Mac, but the mouse and keyboard do nothing</td>
+      <td>RustDesk lacks <em>Accessibility</em>. Switch it on in System Settings &gt; Privacy &amp; Security
+      &gt; Accessibility, then quit and reopen RustDesk.</td></tr>
+  <tr><td>The screen stays black</td>
+      <td>RustDesk lacks <em>Screen Recording</em>: same place, under Screen Recording.</td></tr>
+  <tr><td>"ID does not exist" or it can't connect</td>
+      <td>Is your Mac on, awake and on the office network, and does RustDesk say <em>Ready</em> at the bottom
+      of its window? Otherwise run the setup script again.</td></tr>
+  <tr><td>"Key mismatch"</td><td>Run the setup script again.</td></tr>
+  <tr><td>It lags</td><td>Usually the Wi-Fi. A network cable (a USB-C adapter) fixes it.</td></tr>
+  <tr><td>Windows end up on screens you can't see</td>
+      <td>{{ netstation_mac_office_mode_name }} is still on: open it again to switch it off.</td></tr>
+</table>
+
+<h2>For IT</h2>
+<p>RustDesk on the Mac uses the office's own server, under Settings &gt; Network &gt; ID/Relay server:</p>
+<table>
+  <tr><td>ID server</td><td><code>{{ netstation_remote_mac_server_address }}</code></td></tr>
+  <tr><td>Relay server</td><td>(empty)</td></tr>
+  <tr><td>Key</td><td><code>{{ netstation_rustdesk_public_key }}</code></td></tr>
+  <tr><td>Versions</td><td>RustDesk {{ netstation_mac_rustdesk_version }},
+      SimpleDisplay {{ netstation_mac_simpledisplay_version }}</td></tr>
+</table>
+
+</body>
+</html>

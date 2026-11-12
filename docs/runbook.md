@@ -226,20 +226,47 @@ vault_rustdesk_private_key: "..."
 netstation_rustdesk_private_key: "{{ vault_rustdesk_private_key }}"
 ```
 
-**Setting up a Mac**, once:
+**Setting up the Macs.** Make the handout for the Mac users:
 
-1. Install RustDesk from <https://rustdesk.com> and let it start at login.
-2. In RustDesk, Settings > Network > ID/Relay server: set the ID server to
-   the server's address and the key printed by the `server` playbook. Leave
-   the relay server empty.
-3. In macOS System Settings > Privacy & Security, allow RustDesk under
-   **Screen Recording** and **Accessibility**, then quit and reopen RustDesk.
-   Without Accessibility the client sees the screen but can't control it.
+```bash
+ansible-playbook nickmous.netstation.mac_handout
+```
+
+It writes two files to `build/mac-handout/` in your configuration
+repository: a manual (HTML; open it in a browser, print it or save it as
+PDF) and a setup script. Hand them out, e.g. by email or AirDrop. Nothing in
+them is secret: the script has the server's address and its public key, and
+the Mac users need no access to the server or the vault.
+
+On the Mac, the user runs the script in Terminal, as the manual explains. It
+asks for the Mac's password once, and:
+
+- installs RustDesk and [SimpleDisplay](https://github.com/SamuelRioTz/SimpleDisplay)
+  (pinned versions, checksums checked) in Applications;
+- sets this server and its key in RustDesk, before RustDesk's service is
+  installed, so the service takes them over;
+- opens the settings for Screen Recording and Accessibility, which only the
+  user can allow on a Mac without MDM;
+- adds an **office mode** app (`netstation_mac_office_mode_name`): clicked
+  once, it adds virtual screens (`netstation_mac_office_displays`) and keeps
+  the Mac awake; clicked again, it removes them. RustDesk shows as many Mac
+  screens as the client has, starting with the Mac's main screen, usually
+  its own. `netstation_mac_office_builtin_off: true` also switches the Mac's
+  own screen off, so the client shows only the virtual screens;
+- shows the Mac's RustDesk ID.
+
+Running the script again updates the apps and the settings. Make and hand
+out a new handout after changing a version or the server's key. The manual
+is English; `netstation_mac_handout_manual_template` points at your own (e.g.
+translated) template, and `netstation_mac_handout_messages` holds what the
+script and office mode say.
 
 **Updating RustDesk.** Change `netstation_rustdesk_client_version` and
-`netstation_rustdesk_client_checksum` (image), or
+`netstation_rustdesk_client_checksum` (image),
 `netstation_rustdesk_server_version` and `netstation_rustdesk_server_checksums`
-(server). The checksums are on the GitHub release pages.
+(server), or `netstation_mac_rustdesk_version` and
+`netstation_mac_rustdesk_checksums` (Macs, then a new handout). The checksums
+are on the GitHub release pages.
 
 ## Adding a client
 
@@ -338,7 +365,7 @@ The client keeps its journal in memory, so it's gone after a reboot.
 - **"Key mismatch":** the key on the Mac isn't the server's. Show the right
   one with `sudo cat /var/lib/rustdesk-server/id_ed25519.pub`.
 - **The screen shows, but mouse and keyboard do nothing:** RustDesk on the
-  Mac lacks Accessibility (see Setting up a Mac). Reopen RustDesk after
+  Mac lacks Accessibility (see Setting up the Macs). Reopen RustDesk after
   allowing it.
 - **Lag:** usually the Mac's Wi-Fi. A network cable fixes it; Retina
   resolutions on the Mac also cost speed.

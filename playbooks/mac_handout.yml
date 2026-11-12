@@ -1,0 +1,13 @@
+---
+# Write the handout for Remote Mac users to build/mac-handout/ in your
+# configuration repository: a setup script for their Mac and a manual. Hand
+# them out; the Mac users need no access to the server or the vault. Changes
+# nothing on the server.
+- name: Make the Remote Mac handout
+  hosts: netstation_servers
+  become: true
+  tasks:
+    - name: Setup script and manual
+      ansible.builtin.include_role:
+        name: nickmous.netstation.rustdesk_server
+        tasks_from: mac_handout

@@ -59,8 +59,10 @@ fi
 
 # Exit codes from FreeRDP's client/X11/xfreerdp.h.
 case $result in
-"exit 0" | "exit 1" | "exit 2" | "exit 3" | "exit 5" | "exit 11" | "exit 145")
-    # Disconnected or logged off normally, or cancelled.
+"exit 0" | "exit 1" | "exit 2" | "exit 3" | "exit 5" | "exit 11" | "exit 12" | "exit 145")
+    # Disconnected or logged off normally, or cancelled. 12 is the server's
+    # ERRINFO_LOGOFF_BY_USER (signed out from the Windows start menu), which
+    # FreeRDP passes through as is.
     exit 0
     ;;
 "exit 132" | "exit 134" | "exit 154" | "exit 159")

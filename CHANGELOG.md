@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.2 (2026-11-12)
 
 - The client's speakers and headphones start at 100% at every login, so the
   Remote Desktop session's volume control alone sets how loud it is. Before,

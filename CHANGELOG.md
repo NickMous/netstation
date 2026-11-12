@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 (2026-11-12)
 
 - **Remote Mac** (`netstation_remote_mac_enabled`): people control their own
   Mac from any client with RustDesk, on the client's keyboard, mouse and

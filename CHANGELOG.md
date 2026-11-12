@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.1 (2026-11-12)
 
 - The panel has a volume icon (`xfce4-pulseaudio-plugin`) with a slider and
   mute, and the keyboard's volume keys work. Its mixer, `pavucontrol`, picks

@@ -1,0 +1,6 @@
+{# Clients with their own wake schedule: MAC and wake group (wake-N, or none
+   for wake: []). Read by netstation-power; everything else is in the default
+   group. #}
+{% for client in netstation_clients if client.wake is defined %}
+{{ client.mac | lower }}	{{ ('wake-' ~ (netstation_power_wake_groups.index(client.wake) + 1)) if client.wake | length > 0 else 'none' }}
+{% endfor %}

@@ -3,13 +3,42 @@
 # clients exist, and reporting the ones still on. The clients switch
 # themselves off (image role).
 
+- name: Check the wake schedules in netstation_clients
+  ansible.builtin.assert:
+    that:
+      - item.wake is not string
+      - item.wake is sequence
+    fail_msg: >-
+      wake of {{ item.label | default(item.mac) }} must be a list of times,
+      e.g. ["Mon..Fri 07:30"], or [] to never wake it on a schedule.
+    quiet: true
+  loop: "{{ netstation_clients | selectattr('wake', 'defined') }}"
+  loop_control:
+    label: "{{ item.label | default(item.mac) }}"
+
+# Clients with the same wake schedule share a group and a timer:
+# netstation-power-wake-N.timer for group N.
+- name: Group the clients by wake schedule
+  ansible.builtin.set_fact:
+    netstation_power_wake_groups: >-
+      {{ netstation_clients | selectattr('wake', 'defined') | map(attribute='wake')
+         | reject('equalto', []) | map('to_json') | unique | map('from_json') | list }}
+
+- name: Set the wake timers
+  ansible.builtin.set_fact:
+    netstation_power_wake_timers: >-
+      {{ ([{'action': 'wake', 'times': netstation_power_wake}] if netstation_power_wake | length > 0 else [])
+         + (dict(range(1, netstation_power_wake_groups | length + 1) | map('string') | map('regex_replace', '^', 'wake-')
+                 | zip(netstation_power_wake_groups))
+            | dict2items(key_name='action', value_name='times')) }}
+
 # Remembering the clients that are on (learn) lets wake reach clients that
 # aren't listed in netstation_clients.
 - name: Set the power timers
   ansible.builtin.set_fact:
     netstation_power_timers: >-
-      {{ ([{'action': 'wake', 'times': netstation_power_wake}] if netstation_power_wake | length > 0 else [])
-         + ([{'action': 'learn', 'times': [], 'interval': '10min'}] if netstation_power_wake | length > 0 else [])
+      {{ netstation_power_wake_timers
+         + ([{'action': 'learn', 'times': [], 'interval': '10min'}] if netstation_power_wake_timers | length > 0 else [])
          + ([{'action': 'report', 'times': netstation_power_report}] if netstation_power_report | length > 0 else []) }}
 
 - name: Write the power settings and the known clients
@@ -22,6 +51,7 @@
   loop:
     - { src: power.env.j2, dest: power.env }
     - { src: clients.j2, dest: clients }
+    - { src: wake.j2, dest: wake }
 
 - name: Install netstation-power and netstation-client-name
   ansible.builtin.copy:
@@ -43,20 +73,32 @@
     mode: "0644"
   register: netstation_power_service
 
+- name: Find the installed power timers
+  ansible.builtin.find:
+    paths: /etc/systemd/system
+    patterns: '^netstation-power-(wake|wake-\d+|learn|report)\.timer$'
+    use_regex: true
+  register: netstation_power_timers_installed
+
+- name: List the unused power timers
+  ansible.builtin.set_fact:
+    netstation_power_timers_unused: >-
+      {{ netstation_power_timers_installed.files | map(attribute='path') | map('basename')
+         | difference(netstation_power_timers | map(attribute='action')
+                      | map('regex_replace', '^', 'netstation-power-') | map('regex_replace', '$', '.timer')) }}
+
 - name: Stop the unused power timers
   ansible.builtin.systemd_service:
-    name: "netstation-power-{{ item }}.timer"
+    name: "{{ item }}"
     enabled: false
     state: stopped
-  loop: "{{ ['wake', 'learn', 'report'] | difference(netstation_power_timers | map(attribute='action')) }}"
-  # The timer may never have been installed.
-  failed_when: false
+  loop: "{{ netstation_power_timers_unused }}"
 
 - name: Remove the unused power timers
   ansible.builtin.file:
-    path: "/etc/systemd/system/netstation-power-{{ item }}.timer"
+    path: "/etc/systemd/system/{{ item }}"
     state: absent
-  loop: "{{ ['wake', 'learn', 'report'] | difference(netstation_power_timers | map(attribute='action')) }}"
+  loop: "{{ netstation_power_timers_unused }}"
 
 - name: Install the power timers
   ansible.builtin.template:

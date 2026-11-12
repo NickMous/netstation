@@ -78,6 +78,8 @@ netstation_autologin: true
 #     label: Reception          # optional: who or what it's for, shown in alerts
 #     test: true                # optional: boots staging, shows the boot menu
 #     settings: {}              # optional: extra ltsp.conf lines for this client
+#     wake: ["Mon..Fri 07:30"]  # optional: its own wake times instead of
+#                               # netstation_power_wake; [] = never woken by the schedule
 netstation_clients: []
 
 # Where the wake playbook sends Wake-on-LAN packets: the broadcast address of

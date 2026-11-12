@@ -1,6 +1,9 @@
 #!/bin/sh
 # Power schedule on the server, started by the netstation-power-*.timer units.
-#   netstation-power wake    Wake all known clients with Wake-on-LAN
+#   netstation-power wake    Wake the known clients without their own wake
+#                            schedule, with Wake-on-LAN
+#   netstation-power wake-N  Wake the clients in wake group N (netstation_clients
+#                            entries with their own wake schedule)
 #   netstation-power learn   Remember the clients that are on now, for wake
 #   netstation-power report  Send a Pushover alert listing the clients that are on
 set -eu
@@ -9,6 +12,8 @@ set -eu
 . /etc/netstation/power.env
 
 known=/var/lib/netstation/known-clients
+# "MAC group" for the clients with their own wake schedule.
+groups=/etc/netstation/wake
 
 # Clients that are on now: "IP MAC".
 clients_on() {
@@ -18,9 +23,19 @@ clients_on() {
 
 case ${1:-} in
 wake)
+    # Every known client, except those with their own schedule.
     macs=$( (awk '{ print $1 }' /etc/netstation/clients; awk '{ print $1 }' "$known" 2>/dev/null) |
-        sort -u)
-    [ -n "$macs" ] || { echo "No known clients to wake"; exit 0; }
+        tr 'A-F' 'a-f' | sort -u |
+        awk -v groups="$groups" '
+            BEGIN { while ((getline line < groups) > 0) { split(line, f); own[f[1]] = 1 } }
+            !($1 in own)')
+    [ -n "$macs" ] || { echo "No clients to wake"; exit 0; }
+    # shellcheck disable=SC2086 # one argument per MAC address
+    wakeonlan -i "$NETSTATION_WAKE_BROADCAST" $macs
+    ;;
+wake-*)
+    macs=$(awk -v group="$1" '$2 == group { print $1 }' "$groups" 2>/dev/null | sort -u)
+    [ -n "$macs" ] || { echo "No clients in $1"; exit 0; }
     # shellcheck disable=SC2086 # one argument per MAC address
     wakeonlan -i "$NETSTATION_WAKE_BROADCAST" $macs
     ;;
@@ -46,7 +61,7 @@ report)
     fi
     ;;
 *)
-    echo "Usage: netstation-power wake|learn|report" >&2
+    echo "Usage: netstation-power wake|wake-N|learn|report" >&2
     exit 1
     ;;
 esac

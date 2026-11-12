@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- A client in `netstation_clients` can have its own wake times (`wake`),
+  e.g. earlier or also on Saturday. They replace `netstation_power_wake` for
+  that client; `wake: []` keeps it out of the scheduled wake. Clients with the
+  same times share a `netstation-power-wake-N` timer. Takes `server`.
+
 ## 0.6.3 (2026-11-05)
 
 - A screen switched on after the client started is put next to the others,

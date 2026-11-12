@@ -151,14 +151,32 @@ netstation_power_report: ["22:00"]        # Pushover: clients still on
 
 Times are systemd calendar times, so `"Mon..Fri 08:45"` works too. The wake
 reaches the clients in `netstation_clients` and every client the server has
-seen before (`/var/lib/netstation/known-clients`). Switching off is part of
+seen before (`/var/lib/netstation/known-clients`).
+
+A client in `netstation_clients` can have its own wake times. They replace
+`netstation_power_wake` for that client:
+
+```yaml
+netstation_power_wake: ["Mon..Fri 08:45"]
+netstation_clients:
+  - mac: "d8:9e:f3:37:53:a1"
+    label: Reception
+    wake: ["Mon..Fri 07:30", "Sat 08:45"]   # earlier, and also on Saturday
+  - mac: "d8:9e:f3:37:53:a2"
+    label: Spare
+    wake: []                                # never woken by the schedule
+```
+
+Clients with the same `wake` list share a timer
+(`netstation-power-wake-N.timer`); `systemctl list-timers 'netstation-power-*'`
+shows when each fires next. Switching off is part of
 the image, so after changing `netstation_power_off` run `image_build`, test,
 and `image_promote`; the other two only need `server`.
 
 Try it by hand on the server:
 
 ```bash
-sudo netstation-power wake      # or: learn, report
+sudo netstation-power wake      # or: wake-1 (a group), learn, report
 ```
 
 ## Veyon computer list

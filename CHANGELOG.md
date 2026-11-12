@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- **Remote Mac** (`netstation_remote_mac_enabled`): people control their own
+  Mac from any client with RustDesk, on the client's keyboard, mouse and
+  screens. The new `rustdesk_server` role runs a RustDesk ID and relay server
+  (`rustdesk-hbbs`, `rustdesk-hbbr`) from the pinned release packages, with
+  the key enforced, reachable only from `netstation_remote_mac_networks`. The
+  image gets the RustDesk client (its own service masked: clients only
+  connect out) and a "Mac" icon that asks for the Mac's RustDesk ID, puts
+  each Mac screen on its own client screen, hides the XFCE panels and swaps
+  Alt and the Windows key (keyd) until the session ends.
+  `netstation_remote_mac_sound: false` keeps the Mac's sound on the Mac. See
+  "Remote Mac" in the runbook. Takes `server` and an image build.
+- `netstation-image build` installs packages from outside the package
+  sources that the build context brings along (`debs/`), with their
+  dependencies.
+
 ## 0.7.2 (2026-11-12)
 
 - The client's speakers and headphones start at 100% at every login, so the

@@ -1,0 +1,11 @@
+// {{ ansible_managed }}
+// netstation-mac-open swaps Alt and the Windows key during a Mac session by
+// starting keyd, and stops it afterwards. The session user may do only that.
+polkit.addRule(function (action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("unit") == "keyd.service" &&
+        (action.lookup("verb") == "start" || action.lookup("verb") == "stop") &&
+        subject.user == {{ netstation_session_user | to_json }}) {
+        return polkit.Result.YES;
+    }
+});

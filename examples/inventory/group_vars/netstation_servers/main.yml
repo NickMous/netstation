@@ -53,3 +53,10 @@ netstation_veyon_public_keys:
 #   - name: admin-laptop
 #     public_key: "REPLACE_WITH_PUBLIC_KEY"
 #     address: 10.99.0.2/32
+
+# --- Remote Mac ------------------------------------------------------------
+
+# People control their own Mac from a client with RustDesk. See "Remote Mac"
+# in the runbook.
+# netstation_remote_mac_enabled: true
+# netstation_rustdesk_private_key: "{{ vault_rustdesk_private_key }}"

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# -k _: only clients with this server's public key may connect.
+[Service]
+ExecStart=
+{% if item == 'hbbs' %}
+ExecStart=/usr/bin/hbbs -k _ -r {{ netstation_remote_mac_server_address }} --mask={{ netstation_remote_mac_networks | first }}
+{% else %}
+ExecStart=/usr/bin/hbbr -k _
+{% endif %}
+# To the journal instead of ever-growing files in /var/log/rustdesk-server.
+StandardOutput=journal
+StandardError=journal

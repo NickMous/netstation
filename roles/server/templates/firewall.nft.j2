@@ -30,6 +30,11 @@ table inet netstation_firewall {
 {% if netstation_wireguard_enabled | default(false) %}
         udp dport {{ netstation_wireguard_port | default(51820) }} accept comment "WireGuard"
 {% endif %}
+{% if netstation_remote_mac_enabled %}
+        # RustDesk ID (21115, 21116) and relay (21117) server, for Remote Mac.
+        ip saddr { {{ netstation_remote_mac_networks | join(', ') }} } tcp dport { 21115, 21116, 21117 } accept comment "RustDesk"
+        ip saddr { {{ netstation_remote_mac_networks | join(', ') }} } udp dport 21116 accept comment "RustDesk"
+{% endif %}
 {% for rule in netstation_firewall_extra_rules %}
         {{ rule }}
 {% endfor %}

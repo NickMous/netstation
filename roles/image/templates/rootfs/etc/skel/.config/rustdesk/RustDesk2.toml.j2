@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# RustDesk's settings for Remote Mac: this server for IDs and relay, and
+# nothing that lets others reach this client.
+rendezvous_server = ''
+nat_type = 0
+serial = 0
+
+[options]
+custom-rendezvous-server = '{{ netstation_remote_mac_server_address }}'
+relay-server = '{{ netstation_remote_mac_server_address }}'
+key = '{{ netstation_rustdesk_public_key }}'
+# Only outgoing connections: no RustDesk service on the client (it's masked
+# in the image too), not visible to others on the network.
+stop-service = 'Y'
+enable-lan-discovery = 'N'
+enable-check-update = 'N'

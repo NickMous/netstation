@@ -112,12 +112,27 @@ cmd_build() {
     # The files netstation adds, so `diff` can compare them between builds.
     (cd "$CONTEXT_DIR/rootfs" && find . -type f | sed 's|^\./||' | LC_ALL=C sort) \
         >"$BUILD_DIR/netstation-files"
+    # Packages from outside the package sources (e.g. RustDesk), installed
+    # with their dependencies before netstation's own files go in.
+    set --
+    debs=""
+    for deb in "$CONTEXT_DIR"/debs/*.deb; do
+        [ -f "$deb" ] && debs="$debs $(basename "$deb")"
+    done
+    if [ -n "$debs" ]; then
+        # shellcheck disable=SC2016 # $1 is expanded by mmdebstrap's hook shell
+        set -- \
+            --customize-hook="echo '==> Installing$debs'" \
+            --customize-hook="copy-in $CONTEXT_DIR/debs /tmp" \
+            --customize-hook='chroot "$1" sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y /tmp/debs/*.deb && rm -rf /tmp/debs"'
+    fi
     log "Building $NETSTATION_STAGING_IMAGE from scratch"
     log "[1/4] Installing Debian $NETSTATION_SUITE and $(echo "$packages" | tr ',' '\n' | wc -l) packages (the longest step)"
     # shellcheck disable=SC2016 # $1 is expanded by mmdebstrap's hook shell
     mmdebstrap --mode=root --variant=minbase \
         --aptopt="APT::Install-Recommends \"$recommends\"" \
         --include="$packages" \
+        "$@" \
         --customize-hook='echo "==> [2/4] Configuring the image"' \
         --customize-hook="sync-in $CONTEXT_DIR/rootfs /" \
         --customize-hook="copy-in $BUILD_DIR/netstation-files /etc" \

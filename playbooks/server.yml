@@ -23,6 +23,11 @@
         name: nickmous.netstation.cockpit
       when: netstation_cockpit_enabled | default(true)
 
+    - name: RustDesk server for Remote Mac
+      ansible.builtin.include_role:
+        name: nickmous.netstation.rustdesk_server
+      when: netstation_remote_mac_enabled | default(false)
+
     - name: Pushover alerts
       ansible.builtin.include_role:
         name: nickmous.netstation.alerts

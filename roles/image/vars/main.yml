@@ -14,7 +14,21 @@ netstation_image_packages: >-
       + (['plymouth', 'plymouth-themes'] if netstation_boot_splash else [])
       + (['cups-daemon', 'ipp-usb', 'avahi-daemon'] if netstation_rdp_printers else [])
       + (['xprintidle'] if netstation_idle_logout_minutes | int > 0 or netstation_power_off | length > 0 else [])
+      + (['xdotool'] if netstation_remote_mac_enabled else [])
+      + (['keyd'] if netstation_remote_mac_enabled and netstation_remote_mac_swap_alt_cmd else [])
       + netstation_image_extra_packages) | unique }}
+
+# Debian packages from outside the package sources, downloaded into the
+# build context and installed with their dependencies:
+#   - name: ...                # file name in the build context
+#     url: ...
+#     checksum: sha256:...
+netstation_image_local_debs: >-
+  {{ [{'name': 'rustdesk_' ~ netstation_rustdesk_client_version ~ '_amd64.deb',
+       'url': 'https://github.com/rustdesk/rustdesk/releases/download/' ~ netstation_rustdesk_client_version
+              ~ '/rustdesk-' ~ netstation_rustdesk_client_version ~ '-x86_64.deb',
+       'checksum': netstation_rustdesk_client_checksum}]
+     if netstation_remote_mac_enabled else [] }}
 
 # The kernel modules of each GPU driver netstation_initrd_gpu_drivers can keep.
 netstation_gpu_driver_modules:
@@ -96,6 +110,21 @@ netstation_rootfs_templates:
     when: "{{ netstation_wake_on_lan }}"
   - dest: etc/systemd/system/netstation-wol.service
     when: "{{ netstation_wake_on_lan }}"
+  - dest: usr/local/bin/netstation-mac-open
+    mode: "0755"
+    when: "{{ netstation_remote_mac_enabled }}"
+  # Executable, or XFCE asks whether to trust the icon on every click.
+  - dest: etc/skel/Desktop/netstation-mac.desktop
+    mode: "0755"
+    when: "{{ netstation_remote_mac_enabled }}"
+  - dest: etc/skel/.config/rustdesk/RustDesk2.toml
+    when: "{{ netstation_remote_mac_enabled }}"
+  - dest: etc/skel/.config/rustdesk/RustDesk_default.toml
+    when: "{{ netstation_remote_mac_enabled }}"
+  - dest: etc/keyd/netstation-mac.conf
+    when: "{{ netstation_remote_mac_enabled and netstation_remote_mac_swap_alt_cmd }}"
+  - dest: etc/polkit-1/rules.d/50-netstation-mac.rules
+    when: "{{ netstation_remote_mac_enabled and netstation_remote_mac_swap_alt_cmd }}"
 
 # Options for xfreerdp3 from the pass-through settings.
 netstation_rdp_redirect_options: >-

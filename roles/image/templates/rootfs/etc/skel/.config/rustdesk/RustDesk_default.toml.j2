@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# RustDesk's defaults for every connection (netstation_remote_mac_rustdesk_defaults).
+
+[options]
+{% for key, value in netstation_remote_mac_rustdesk_defaults.items() %}
+{{ key }} = '{{ value }}'
+{% endfor %}
+{% if not netstation_remote_mac_sound %}
+# netstation_remote_mac_sound: false
+disable_audio = 'Y'
+{% endif %}

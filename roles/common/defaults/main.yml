@@ -52,3 +52,16 @@ netstation_power_wake: []
 netstation_power_off: []
 # Send a Pushover alert listing the clients that are still on.
 netstation_power_report: []
+
+# Remote Mac: people control their own Mac from a client with RustDesk, on
+# the client's keyboard, mouse and screens. Runs a RustDesk ID and relay
+# server on this server (rustdesk_server role) and puts the RustDesk client
+# and a "Mac" desktop icon in the image (image role).
+netstation_remote_mac_enabled: false
+# The address the clients and the Macs use for the RustDesk server.
+netstation_remote_mac_server_address: "{{ ansible_facts['default_ipv4']['address'] }}"
+# Networks that may use the RustDesk server: the clients and the Macs. The
+# first one also tells the server which connections are on the LAN, so it
+# connects those directly instead of through the relay.
+netstation_remote_mac_networks:
+  - "{{ ansible_facts['default_ipv4']['network'] }}/{{ ansible_facts['default_ipv4']['prefix'] }}"

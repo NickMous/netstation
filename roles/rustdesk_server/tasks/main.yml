@@ -1,0 +1,172 @@
+---
+# With another program on these ports the services would keep failing to
+# start, while this playbook looks fine. Our own services (on a second run)
+# don't count.
+- name: Look for other programs on the RustDesk ports
+  ansible.builtin.shell: |
+    set -o pipefail
+    ss -Hltnup '( sport = :21115 or sport = :21116 or sport = :21117 )' |
+        { grep -o 'pid=[0-9]*' || true; } | cut -d= -f2 | sort -u |
+        while read -r pid; do
+            grep -q 'rustdesk-hbb[sr]\.service' "/proc/$pid/cgroup" ||
+                echo "$(cat "/proc/$pid/comm") (pid $pid, $(cut -d: -f3 "/proc/$pid/cgroup"))"
+        done
+  args:
+    executable: /bin/bash
+  register: netstation_rustdesk_port_users
+  changed_when: false
+  check_mode: false
+
+- name: Check that the RustDesk ports are free
+  ansible.builtin.assert:
+    that: netstation_rustdesk_port_users.stdout | length == 0
+    fail_msg: >-
+      Something else uses the RustDesk ports 21115-21117:
+      {{ netstation_rustdesk_port_users.stdout_lines | join('; ') }}.
+      Stop it, then run this playbook again.
+    quiet: true
+
+- name: Create the RustDesk server folders
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: /var/lib/rustdesk-server, mode: "0700" }
+    - { path: /var/log/rustdesk-server, mode: "0755" }
+    - { path: "{{ netstation_state_dir }}/downloads", mode: "0755" }
+    - { path: /etc/systemd/system/rustdesk-hbbs.service.d, mode: "0755" }
+    - { path: /etc/systemd/system/rustdesk-hbbr.service.d, mode: "0755" }
+
+# Before the packages, which start the services right away: hbbs makes a new
+# key on its first start when there is none.
+- name: Write the RustDesk server's private key
+  ansible.builtin.copy:
+    content: "{{ netstation_rustdesk_private_key | trim }}"
+    dest: /var/lib/rustdesk-server/id_ed25519
+    owner: root
+    group: root
+    mode: "0600"
+  when: netstation_rustdesk_private_key | length > 0
+  no_log: true
+  notify: Restart the RustDesk server
+
+- name: Set the RustDesk server's options
+  ansible.builtin.template:
+    src: netstation.conf.j2
+    dest: /etc/systemd/system/rustdesk-{{ item }}.service.d/netstation.conf
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - hbbs
+    - hbbr
+  notify: Restart the RustDesk server
+
+# A dry run (--check) on a server without RustDesk yet can't download,
+# install or start it; it stops here.
+- name: Check whether the RustDesk server is installed
+  ansible.builtin.stat:
+    path: /usr/bin/hbbs
+  register: netstation_rustdesk_installed
+
+- name: Tell that the dry run stops here
+  ansible.builtin.debug:
+    msg: The RustDesk server isn't installed yet, so this dry run skips downloading, installing and starting it.
+  when: ansible_check_mode and not netstation_rustdesk_installed.stat.exists
+
+- name: Install and start the RustDesk server
+  when: not ansible_check_mode or netstation_rustdesk_installed.stat.exists
+  block:
+    - name: Download the RustDesk server packages
+      ansible.builtin.get_url:
+        url: "https://github.com/rustdesk/rustdesk-server/releases/download/{{ netstation_rustdesk_server_version }}/{{ deb }}"
+        dest: "{{ netstation_state_dir }}/downloads/{{ deb }}"
+        checksum: "{{ netstation_rustdesk_server_checksums[item] }}"
+        owner: root
+        group: root
+        mode: "0644"
+      vars:
+        deb: "rustdesk-server-{{ item }}_{{ netstation_rustdesk_server_version }}_amd64.deb"
+      loop:
+        - hbbs
+        - hbbr
+
+    # In a dry run a new version isn't downloaded, so there's nothing to
+    # install; the download above already shows it as changed.
+    - name: Install the RustDesk server
+      when: not ansible_check_mode
+      ansible.builtin.apt:
+        deb: "{{ netstation_state_dir }}/downloads/{{ deb }}"
+      vars:
+        deb: "rustdesk-server-{{ item }}_{{ netstation_rustdesk_server_version }}_amd64.deb"
+      loop:
+        - hbbs
+        - hbbr
+      notify: Restart the RustDesk server
+
+    - name: Enable the RustDesk server
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+      loop:
+        - rustdesk-hbbs
+        - rustdesk-hbbr
+
+    # Restarts from the handlers come at the end, so make them happen now:
+    # the checks below must see the server running with its current settings
+    # and key.
+    - name: Apply the RustDesk server changes
+      ansible.builtin.meta: flush_handlers
+
+    - name: Check that the RustDesk server listens
+      ansible.builtin.wait_for:
+        port: "{{ item }}"
+        timeout: 30
+      loop:
+        - 21116
+        - 21117
+      when: not ansible_check_mode
+
+    - name: Wait for the RustDesk server's key
+      ansible.builtin.wait_for:
+        path: /var/lib/rustdesk-server/id_ed25519
+        timeout: 30
+
+    # The public key is the second half of the private key.
+    - name: Read the RustDesk server's public key
+      ansible.builtin.shell: set -o pipefail && base64 -d /var/lib/rustdesk-server/id_ed25519 | tail -c 32 | base64 -w0
+      args:
+        executable: /bin/bash
+      register: netstation_rustdesk_public_key_result
+      changed_when: false
+      check_mode: false
+
+    # The image build reads it from here.
+    - name: Write the RustDesk server's public key
+      ansible.builtin.copy:
+        content: "{{ netstation_rustdesk_public_key_result.stdout }}"
+        dest: /var/lib/rustdesk-server/id_ed25519.pub
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Show the settings for the Macs
+      ansible.builtin.debug:
+        msg:
+          - "In RustDesk on each Mac, Settings > Network > ID/Relay server:"
+          - "  ID server: {{ netstation_remote_mac_server_address }}"
+          - "  Key: {{ netstation_rustdesk_public_key_result.stdout }}"
+
+    - name: Remind to keep the key in the vault
+      ansible.builtin.debug:
+        msg: >-
+          The RustDesk server made its own key. Put it in the vault as
+          netstation_rustdesk_private_key, or a reinstalled server gets a new
+          one and every Mac must be set up again. Show it with:
+          sudo cat /var/lib/rustdesk-server/id_ed25519
+      when: netstation_rustdesk_private_key | length == 0

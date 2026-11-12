@@ -1,0 +1,14 @@
+---
+# The RustDesk server for Remote Mac (netstation_remote_mac_enabled): hbbs
+# (IDs) and hbbr (relay), from the rustdesk-server releases on GitHub.
+# Change the version deliberately, with the checksums from the release page.
+netstation_rustdesk_server_version: "1.1.16"
+netstation_rustdesk_server_checksums:
+  hbbs: sha256:7d007f6cc9392b94d3b2d545b288299c1cabced9aeee20e1319cf703fc4a2904
+  hbbr: sha256:e829f6ed12a5c3d2cede949bffff1821593f7da4df4f32fb483ea4c7440ed360
+
+# The server's private key: the contents of id_ed25519. Keep it in the vault.
+# Every Mac is set up with the matching public key, so a new key means
+# setting up every Mac again. Empty: the server makes one on its first start;
+# copy it into the vault afterwards (the server playbook says how).
+netstation_rustdesk_private_key: ""

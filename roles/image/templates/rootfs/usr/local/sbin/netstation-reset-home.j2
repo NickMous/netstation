@@ -5,6 +5,12 @@
 # As the cleanup script it gets --restart-lightdm.
 user={{ netstation_session_user | quote }}
 
+{% if netstation_remote_mac_enabled and netstation_remote_mac_swap_alt_cmd %}
+# A Mac session swaps Alt and the Windows key with keyd. Never let that carry
+# over into the next session, e.g. after a logout during a Mac session.
+systemctl --no-block stop keyd.service 2>/dev/null
+
+{% endif %}
 # Only on clients, where the user is merged in from the server.
 id "$user" >/dev/null 2>&1 || exit 0
 home=$(getent passwd "$user" | cut -d: -f6)

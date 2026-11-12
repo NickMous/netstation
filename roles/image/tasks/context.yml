@@ -32,6 +32,69 @@
     - sources.list
     - build.env
 
+- name: Add the packages from outside the package sources
+  when: netstation_image_local_debs | length > 0
+  block:
+    # Kept between builds, so each version is downloaded once.
+    - name: Create the download folder
+      ansible.builtin.file:
+        path: "{{ netstation_state_dir }}/downloads"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Download the packages
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ netstation_state_dir }}/downloads/{{ item.name }}"
+        checksum: "{{ item.checksum }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop: "{{ netstation_image_local_debs }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create the folder for the packages
+      ansible.builtin.file:
+        path: "{{ netstation_context_new }}/debs"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Put the packages in the build context
+      ansible.builtin.copy:
+        src: "{{ netstation_state_dir }}/downloads/{{ item.name }}"
+        dest: "{{ netstation_context_new }}/debs/{{ item.name }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0644"
+      loop: "{{ netstation_image_local_debs }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+- name: Read the RustDesk server's public key
+  when: netstation_remote_mac_enabled
+  block:
+    - name: Read the public key
+      ansible.builtin.slurp:
+        src: /var/lib/rustdesk-server/id_ed25519.pub
+      register: netstation_rustdesk_public_key_file
+      failed_when: false
+
+    - name: Check that the RustDesk server is set up
+      ansible.builtin.assert:
+        that: netstation_rustdesk_public_key_file.content is defined
+        fail_msg: The RustDesk server isn't set up yet; run the server playbook first.
+        quiet: true
+
+    - name: Remember the public key
+      ansible.builtin.set_fact:
+        netstation_rustdesk_public_key: "{{ netstation_rustdesk_public_key_file.content | b64decode | trim }}"
+
 - name: Create the folders for the image files
   ansible.builtin.file:
     path: "{{ netstation_context_new }}/rootfs/{{ item.dest | dirname }}"

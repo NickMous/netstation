@@ -23,6 +23,9 @@ every logout starts clean. All maintenance happens in one place, on the server.
   automatic security updates on the server.
 - **Power schedule.** Wake the clients in the morning; they switch themselves
   off when nobody uses them.
+- **Remote Mac.** Optional: people control their own Mac from any client with
+  RustDesk, on the client's keyboard, mouse and screens, through a RustDesk
+  server on this server.
 - **Alerts.** Optional Pushover alerts for failed builds and services, a
   hanging dnsmasq, a full disk, failed security updates and pending reboots.
 
@@ -38,7 +41,7 @@ every logout starts clean. All maintenance happens in one place, on the server.
 | Playbook | What it does |
 |---|---|
 | `nickmous.netstation.installer_iso` | Build an unattended Debian installer ISO for the server |
-| `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, security updates, alerts, WireGuard, Cockpit) |
+| `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, security updates, alerts, WireGuard, Cockpit, RustDesk) |
 | `nickmous.netstation.image_build` | Build a new staging image from scratch |
 | `nickmous.netstation.image_diff` | Show what changed between production and staging |
 | `nickmous.netstation.image_promote` | Make the staging image the production image |
@@ -111,15 +114,17 @@ network hands out the IP addresses.
 Every variable is documented, with its default, in `roles/*/defaults/main.yml`:
 
 - `roles/common/defaults/main.yml`: image names, session user, Debian release,
-  locale, Veyon, power schedule
+  locale, Veyon, power schedule, Remote Mac on/off
 - `roles/server/defaults/main.yml`: DHCP mode, NAT for two-network-card
   setups, known clients and test clients, extra `ltsp.conf` settings
 - `roles/image/defaults/main.yml`: homepage, wallpaper, desktop shortcuts,
   idle logout, RDP options and pass-through, time servers, Firefox policies,
-  packages, extra files, scheduled builds
+  packages, extra files, scheduled builds, Remote Mac dialogs and RustDesk
+  client
 - `roles/installer/defaults/main.yml`: admin account, network settings and
   extra network cards for the installed server
 - `roles/alerts/defaults/main.yml`: Pushover keys and what to alert on
+- `roles/rustdesk_server/defaults/main.yml`: RustDesk server version and key
 - `roles/wireguard/defaults/main.yml` and `roles/cockpit/defaults/main.yml`
 
 All variables share the `netstation_` prefix, so you can set them in one

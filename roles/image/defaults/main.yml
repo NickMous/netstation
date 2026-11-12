@@ -92,6 +92,42 @@ netstation_firefox_policies: {}
 # Debian's public NTP pool.
 netstation_ntp_servers: []
 
+# --- Remote Mac (netstation_remote_mac_enabled) -----------------------------
+
+# The RustDesk client, from the RustDesk releases on GitHub. Change the
+# version deliberately, with the checksum from the release page.
+netstation_rustdesk_client_version: "1.5.3"
+netstation_rustdesk_client_checksum: sha256:81096d2f65fd43352540c351bca15bb0712a2a6f9efa4c95e9fff25cb97b3b81
+
+# The desktop icon that starts a Mac session.
+netstation_remote_mac_icon_name: Mac
+
+# What the Mac dialogs say, e.g. in the language of the site. Set all of them
+# when you change one.
+netstation_remote_mac_messages:
+  title: Mac
+  prompt: Enter your Mac's RustDesk ID. RustDesk on your Mac shows it.
+  invalid_id: That isn't a RustDesk ID. Check it on your Mac and try again.
+  failed: RustDesk didn't start. Try again; if it keeps happening, tell IT.
+
+# During a Mac session, Alt and the Windows key swap places (with keyd), so
+# the key next to the space bar is Cmd, as on a Mac keyboard.
+netstation_remote_mac_swap_alt_cmd: true
+
+# The Mac's sound plays on the client.
+netstation_remote_mac_sound: true
+
+# RustDesk's defaults for every connection, as in its settings
+# (RustDesk_default.toml). Each Mac screen opens in its own window on its own
+# screen of the client, with the toolbar collapsed. image_quality "low" is
+# "Optimize reaction time".
+netstation_remote_mac_rustdesk_defaults:
+  displays_as_individual_windows: "Y"
+  use_all_my_displays_for_the_remote_session: "Y"
+  collapse_toolbar: "Y"
+  view_style: adaptive
+  image_quality: low
+
 # --- Packages ---------------------------------------------------------------
 
 netstation_image_components:

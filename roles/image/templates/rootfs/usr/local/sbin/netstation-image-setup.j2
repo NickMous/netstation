@@ -62,6 +62,16 @@ for timer in /etc/systemd/system/netstation-power-off-*.timer; do
     systemctl enable "$(basename "$timer")"
 done
 {% endif %}
+{% if netstation_remote_mac_enabled %}
+# RustDesk's package enables its service, which would let others control
+# this client. Clients only connect out.
+systemctl disable rustdesk.service
+systemctl mask rustdesk.service
+{% if netstation_remote_mac_swap_alt_cmd %}
+# keyd runs only during a Mac session (netstation-mac-open).
+systemctl disable keyd.service
+{% endif %}
+{% endif %}
 {% if netstation_veyon_enabled %}
 for key in /etc/netstation/veyon/*.pem; do
     [ -e "$key" ] || continue

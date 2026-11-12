@@ -1,0 +1,118 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# Remote Mac: controls the user's own Mac with RustDesk, on this client's
+# keyboard, mouse and screens. Asks for the Mac's RustDesk ID; RustDesk then
+# asks for the Mac's password. During the session the XFCE panels are gone
+{% if netstation_remote_mac_swap_alt_cmd %}
+# and Alt and the Windows key swap places (keyd), so the key next to the
+# space bar is Cmd.
+{% else %}
+# so they don't show on top of the Mac's screens.
+{% endif %}
+# Everything comes back when the last RustDesk window closes.
+# RustDesk's output goes to the journal (journalctl -t netstation-mac).
+set -u
+
+# The dialog texts, from netstation_remote_mac_messages.
+{% for key in ['title', 'prompt', 'invalid_id', 'failed'] %}
+msg_{{ key }}={{ netstation_remote_mac_messages[key] | quote }}
+{% endfor %}
+
+log() {
+    logger -t netstation-mac -- "$*"
+}
+
+# One Mac session at a time; a second click on the icon does nothing. The
+# programs this script starts must not inherit the lock (9>&-): the panel
+# keeps running afterwards and would hold it until logout.
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/netstation-mac.lock"
+flock -n 9 || exit 0
+
+mac_id=$(zenity --entry --title="$msg_title" --text="$msg_prompt") || exit 0
+# RustDesk shows the ID in groups, e.g. "123 456 789".
+mac_id=$(printf '%s' "$mac_id" | tr -d '[:space:]')
+if ! [[ $mac_id =~ ^[A-Za-z0-9_-]{6,32}$ ]]; then
+    zenity --error --no-markup --title="$msg_title" --text="$msg_invalid_id"
+    exit 0
+fi
+
+# RustDesk's visible windows other than its main window ("RustDesk"), which
+# stays hidden: the windows of the remote session.
+session_windows() {
+    local window
+    for window in $(xdotool search --onlyvisible --class rustdesk 2>/dev/null); do
+        [ "$(xdotool getwindowname "$window" 2>/dev/null)" != RustDesk ] && return 0
+    done
+    return 1
+}
+
+panel_stopped=false
+{% if netstation_remote_mac_swap_alt_cmd %}
+keys_swapped=false
+{% endif %}
+restore() {
+    pkill -u "$UID" -x rustdesk 2>/dev/null
+{% if netstation_remote_mac_swap_alt_cmd %}
+    if $keys_swapped; then
+        systemctl stop keyd.service || log "Couldn't stop keyd"
+    fi
+{% endif %}
+    if $panel_stopped; then
+        setsid -f xfce4-panel >/dev/null 2>&1 9>&-
+    fi
+    log "Session with $mac_id ended"
+}
+trap restore EXIT
+trap 'exit 0' INT TERM HUP
+
+# A RustDesk left over from before would take the connection instead.
+pkill -u "$UID" -x rustdesk 2>/dev/null && sleep 1
+
+if pgrep -u "$UID" -x xfce4-panel >/dev/null; then
+    xfce4-panel --quit && panel_stopped=true
+fi
+{% if netstation_remote_mac_swap_alt_cmd %}
+
+# keyd takes over the keyboard; give the Enter of the dialog time to come up.
+sleep 0.5
+if systemctl start keyd.service; then
+    keys_swapped=true
+else
+    log "Couldn't start keyd; Alt and the Windows key stay as they are"
+fi
+{% endif %}
+
+log "Connecting to $mac_id"
+rustdesk --connect "$mac_id" > >(systemd-cat -t netstation-mac 9>&-) 2>&1 9>&- &
+rustdesk_pid=$!
+
+# Wait for the session's first window: RustDesk asks for the password in it.
+started=false
+for _ in $(seq 60); do
+    if session_windows; then
+        started=true
+        break
+    fi
+    kill -0 "$rustdesk_pid" 2>/dev/null || break
+    sleep 1
+done
+
+if ! $started; then
+    log "RustDesk showed no window for $mac_id"
+    netstation-report error "Remote Mac failed" \
+        "RustDesk showed no window within 60 seconds after connecting to $mac_id. Shown: $msg_failed" &
+    zenity --error --no-markup --title="$msg_title" --text="$msg_failed"
+    exit 0
+fi
+
+# Then until the last one closes. RustDesk replaces windows when it puts the
+# Mac's screens in their own windows, so a window must be gone a few seconds.
+gone=0
+while [ "$gone" -lt 3 ]; do
+    sleep 1
+    if session_windows; then
+        gone=0
+    else
+        gone=$((gone + 1))
+    fi
+done

@@ -59,6 +59,7 @@ haven't set up a vault password file.
 | Files in the image | `files/rootfs/...` | `image_build`, test, `image_promote` |
 | Known clients, test client, per-client settings | `netstation_clients` | `server` |
 | DHCP, firewall, WireGuard peers, other server settings | `group_vars` | `server` |
+| Remote Mac on or off | `netstation_remote_mac_enabled` | `server`, then `image_build`, test, `image_promote` |
 
 Always preview server changes first:
 
@@ -192,6 +193,54 @@ ansible-playbook nickmous.netstation.veyon_computers
 Client IP addresses can change, so run it again when Veyon shows clients as
 offline that are switched on. DHCP reservations for the clients avoid that.
 
+## Remote Mac
+
+With `netstation_remote_mac_enabled`, people control their own Mac from any
+client: the client's keyboard, mouse and screens work the Mac, as with
+Remote Desktop. It uses [RustDesk](https://rustdesk.com): the server runs a
+RustDesk ID and relay server (`rustdesk-hbbs`, `rustdesk-hbbr`), reachable
+only from `netstation_remote_mac_networks`, and the image has the RustDesk
+client and a desktop icon (`netstation_remote_mac_icon_name`).
+
+At the client: click the icon, type the Mac's RustDesk ID, then the
+password RustDesk on the Mac shows. Each Mac screen opens full screen on its
+own client screen. The XFCE panels are gone during the session, and Alt and
+the Windows key swap places, so the key next to the space bar is Cmd. Close
+the RustDesk windows (the toolbar at the top of the screen) to get the
+desktop back.
+
+**Turning it on.** Set `netstation_remote_mac_enabled: true`, run the
+`server` playbook, then build, test and promote an image. The `server`
+playbook prints the ID server and key for the Macs. It makes a key on its
+first run; save it in the vault right away, or a reinstalled server gets a
+new one and every Mac has to be set up again:
+
+```bash
+ssh netadmin@<server> sudo cat /var/lib/rustdesk-server/id_ed25519
+```
+
+```yaml
+# vault.yml
+vault_rustdesk_private_key: "..."
+# main.yml
+netstation_rustdesk_private_key: "{{ vault_rustdesk_private_key }}"
+```
+
+**Setting up a Mac**, once:
+
+1. Install RustDesk from <https://rustdesk.com> and let it start at login.
+2. In RustDesk, Settings > Network > ID/Relay server: set the ID server to
+   the server's address and the key printed by the `server` playbook. Leave
+   the relay server empty.
+3. In macOS System Settings > Privacy & Security, allow RustDesk under
+   **Screen Recording** and **Accessibility**, then quit and reopen RustDesk.
+   Without Accessibility the client sees the screen but can't control it.
+
+**Updating RustDesk.** Change `netstation_rustdesk_client_version` and
+`netstation_rustdesk_client_checksum` (image), or
+`netstation_rustdesk_server_version` and `netstation_rustdesk_server_checksums`
+(server). The checksums are on the GitHub release pages.
+
 ## Adding a client
 
 PXE boot must be enabled in the BIOS/UEFI and Secure Boot disabled. A new
@@ -278,6 +327,26 @@ sudo journalctl -t netstation-rdp
 ```
 
 The client keeps its journal in memory, so it's gone after a reboot.
+
+### Remote Mac doesn't work
+
+- **"ID does not exist" or it can't connect:** the Mac isn't using this
+  server (Settings > Network on the Mac), isn't on the network, or RustDesk
+  isn't running on it. Check the server with
+  `sudo systemctl status rustdesk-hbbs rustdesk-hbbr` and
+  `sudo journalctl -u rustdesk-hbbs`.
+- **"Key mismatch":** the key on the Mac isn't the server's. Show the right
+  one with `sudo cat /var/lib/rustdesk-server/id_ed25519.pub`.
+- **The screen shows, but mouse and keyboard do nothing:** RustDesk on the
+  Mac lacks Accessibility (see Setting up a Mac). Reopen RustDesk after
+  allowing it.
+- **Lag:** usually the Mac's Wi-Fi. A network cable fixes it; Retina
+  resolutions on the Mac also cost speed.
+- **Alt and Cmd aren't swapped,** or still swapped after the session: log in
+  to the client and check `systemctl status keyd`. A logout always stops it.
+
+On the client, `journalctl -t netstation-mac` shows each session and
+RustDesk's output.
 
 ### Logging in to a client
 

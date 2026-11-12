@@ -6,3 +6,7 @@ vault_admin_password: "choose-a-strong-password"
 
 # Only with WireGuard enabled; generate with: wg genkey
 # vault_wireguard_private_key: ""
+
+# Only with Remote Mac enabled: the RustDesk server's private key. The server
+# playbook makes one; copy it from /var/lib/rustdesk-server/id_ed25519.
+# vault_rustdesk_private_key: ""

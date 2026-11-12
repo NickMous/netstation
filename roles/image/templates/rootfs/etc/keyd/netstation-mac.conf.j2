@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Only during a Mac session: netstation-mac-open starts keyd and stops it
+# afterwards. Alt and the Windows key swap places, so the keys next to the
+# space bar are Cmd, as on a Mac keyboard.
+[ids]
+*
+
+[main]
+leftalt = leftmeta
+leftmeta = leftalt
+rightalt = rightmeta
+rightmeta = rightalt

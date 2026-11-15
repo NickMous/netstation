@@ -1,0 +1,9 @@
+{
+  "kind": "Ansible collection",
+  "color": "blue",
+  "status": "in-testing",
+  "oneLiner": {
+    "en": "Thin clients that boot over the network, with no OS of their own. Every boot starts fresh, and all the upkeep happens on one server.",
+    "nl": "Thin clients die via het netwerk opstarten, zonder eigen besturingssysteem. Elke start begint schoon, en al het onderhoud gebeurt op één server."
+  }
+}

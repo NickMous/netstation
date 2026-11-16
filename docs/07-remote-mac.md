@@ -104,4 +104,4 @@ the GitHub release pages:
 | Macs | `netstation_mac_rustdesk_version`, `netstation_mac_rustdesk_checksums` | `mac_handout`, hand it out again |
 
 Something not working? See
-[Remote Mac doesn't work](troubleshooting.md#remote-mac-doesnt-work).
+[Remote Mac doesn't work](08-troubleshooting.md#remote-mac-doesnt-work).

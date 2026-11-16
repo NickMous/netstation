@@ -63,7 +63,7 @@ my-netstation/
 
 Edit `inventory/hosts.yml` (the server's name, address and admin user) and
 `inventory/group_vars/netstation_servers/main.yml`. The example `main.yml`
-lists the settings you usually change; [Configuration](configuration.md)
+lists the settings you usually change; [Configuration](02-configuration.md)
 covers the rest.
 
 Then create the vault with the admin password:
@@ -118,6 +118,6 @@ automatically and opens `netstation_homepage` in Firefox.
 ## Next steps
 
 - Mark one client as a **test client**, so new images can be tested before
-  everyone gets them: see [Managing clients](clients.md).
-- Learn the [update routine](updating-clients.md).
-- Set up [alerts](monitoring.md#alerts) on your phone.
+  everyone gets them: see [Managing clients](04-clients.md).
+- Learn the [update routine](03-updating-clients.md).
+- Set up [alerts](05-monitoring.md#alerts) on your phone.

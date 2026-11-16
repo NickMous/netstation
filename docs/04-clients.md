@@ -31,7 +31,7 @@ ansible-playbook nickmous.netstation.clients
 A client with `test: true` boots the **staging** image by default, and shows
 a boot menu for `netstation_test_menu_timeout` milliseconds (default 5000) to
 pick production instead. Use it to try a new image before you
-[promote](updating-clients.md) it. You can have more than one.
+[promote](03-updating-clients.md) it. You can have more than one.
 
 ## Per-client settings
 

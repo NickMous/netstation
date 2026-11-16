@@ -18,7 +18,7 @@ ansible-playbook nickmous.netstation.clients
 ```
 
 For logs, services, updates and a terminal in the browser, use
-[Cockpit](remote-management.md#cockpit).
+[Cockpit](06-remote-management.md#cockpit).
 
 ## Alerts
 

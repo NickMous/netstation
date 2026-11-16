@@ -22,7 +22,7 @@ sudo journalctl -u dnsmasq -f
   `sudo netstation-dnsmasq-check` after a client has booted; it measures CPU
   use, unread packets and whether TFTP still answers. If it keeps happening,
   pin a working version with `netstation_dnsmasq_version` (see
-  [Configuration](configuration.md#network)).
+  [Configuration](02-configuration.md#network)).
 
 ## A client boots but stops with an error
 
@@ -62,8 +62,8 @@ sudo tail -40 /var/log/lightdm/lightdm.log
 ## Remote Desktop fails on a client
 
 The dialog on the client says roughly what went wrong, and crashes and errors
-come in as [alerts](monitoring.md#alerts). For xfreerdp3's full output,
-[log in to the client](remote-management.md#ssh-into-a-client) while it's
+come in as [alerts](05-monitoring.md#alerts). For xfreerdp3's full output,
+[log in to the client](06-remote-management.md#ssh-into-a-client) while it's
 still on, and run:
 
 ```bash
@@ -85,7 +85,7 @@ Exit code 136 means a screen is mirrored: keep
 - **"Key mismatch":** the key on the Mac isn't the server's. Show the right
   one with `sudo cat /var/lib/rustdesk-server/id_ed25519.pub`.
 - **The screen shows, but mouse and keyboard do nothing:** RustDesk on the
-  Mac lacks Accessibility (see [Setting up the Macs](remote-mac.md#setting-up-the-macs)).
+  Mac lacks Accessibility (see [Setting up the Macs](07-remote-mac.md#setting-up-the-macs)).
   Reopen RustDesk after allowing it.
 - **Lag:** usually the Mac's Wi-Fi. A network cable fixes it; Retina
   resolutions on the Mac also cost speed.
@@ -125,5 +125,5 @@ Production is never touched by a failed build.
 
 Run the `server` playbook again. It's safe to run at any time and puts every
 setting back. If the server is beyond repair, reinstall it from the
-[installer ISO](getting-started.md#3-build-the-installer), run `server`, then
+[installer ISO](01-getting-started.md#3-build-the-installer), run `server`, then
 build and promote a new image.

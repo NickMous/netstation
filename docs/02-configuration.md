@@ -149,7 +149,7 @@ netstation_dnsmasq_suite: bookworm
 ## Clients
 
 Known clients, test clients, per-client `ltsp.conf` settings, Wake-on-LAN and
-the power schedule are on [Managing clients](clients.md). Settings for all
+the power schedule are on [Managing clients](04-clients.md). Settings for all
 clients:
 
 ```yaml
@@ -179,9 +179,9 @@ its home folder lives in RAM.
 
 | Feature | Turn on with | Page |
 |---|---|---|
-| Alerts | `netstation_pushover_app_token`, `netstation_pushover_user_key` | [Status and alerts](monitoring.md#alerts) |
-| WireGuard | `netstation_wireguard_enabled: true` | [Remote management](remote-management.md#wireguard) |
-| Cockpit | on by default; `netstation_cockpit_enabled: false` | [Remote management](remote-management.md#cockpit) |
-| Veyon | `netstation_veyon_enabled: true` | [Remote management](remote-management.md#veyon) |
-| Power schedule | `netstation_power_wake`, `netstation_power_off` | [Managing clients](clients.md#power-schedule) |
-| Remote Mac | `netstation_remote_mac_enabled: true` | [Remote Mac](remote-mac.md) |
+| Alerts | `netstation_pushover_app_token`, `netstation_pushover_user_key` | [Status and alerts](05-monitoring.md#alerts) |
+| WireGuard | `netstation_wireguard_enabled: true` | [Remote management](06-remote-management.md#wireguard) |
+| Cockpit | on by default; `netstation_cockpit_enabled: false` | [Remote management](06-remote-management.md#cockpit) |
+| Veyon | `netstation_veyon_enabled: true` | [Remote management](06-remote-management.md#veyon) |
+| Power schedule | `netstation_power_wake`, `netstation_power_off` | [Managing clients](04-clients.md#power-schedule) |
+| Remote Mac | `netstation_remote_mac_enabled: true` | [Remote Mac](07-remote-mac.md) |

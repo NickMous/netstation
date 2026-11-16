@@ -38,7 +38,7 @@ Run the `ansible-playbook` commands from your configuration repository. Add
 
 3. **Test** it: reboot the test client. It boots staging by default; its boot
    menu also lets you pick production. (No test client yet? See
-   [Test clients](clients.md#test-clients).)
+   [Test clients](04-clients.md#test-clients).)
 
 4. **Promote** it. Clients switch to it on their next reboot.
 
@@ -64,7 +64,7 @@ brings you back to where you started. The server keeps the last
 
 The server builds a fresh staging image every Sunday at 03:00, to pick up
 Debian security updates. Promoting it stays a manual decision. With
-[alerts](monitoring.md#alerts) on, you get a message when it's ready, with
+[alerts](05-monitoring.md#alerts) on, you get a message when it's ready, with
 what changed.
 
 ```yaml
@@ -73,10 +73,10 @@ netstation_staging_build_schedule: "Sun *-*-* 03:00:00"   # systemd OnCalendar
 ```
 
 A failed build never touches production. See
-[The scheduled staging build failed](troubleshooting.md#the-scheduled-staging-build-failed).
+[The scheduled staging build failed](08-troubleshooting.md#the-scheduled-staging-build-failed).
 
 ## Which changes need a new image
 
 Settings that end up on the clients need a new image; settings for the
-server only need the `server` playbook. [Configuration](configuration.md#applying-changes)
+server only need the `server` playbook. [Configuration](02-configuration.md#applying-changes)
 has the full table.

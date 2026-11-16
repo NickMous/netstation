@@ -53,19 +53,19 @@ ansible-playbook nickmous.netstation.image_promote    # make it production
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md): from an empty machine to the
+- [Getting started](docs/01-getting-started.md): from an empty machine to the
   first client booting
-- [Configuration](docs/configuration.md)
-- [Updating the clients](docs/updating-clients.md): build, test, promote,
+- [Configuration](docs/02-configuration.md)
+- [Updating the clients](docs/03-updating-clients.md): build, test, promote,
   roll back
-- [Managing clients](docs/clients.md): test clients, Wake-on-LAN, power
+- [Managing clients](docs/04-clients.md): test clients, Wake-on-LAN, power
   schedule
-- [Status and alerts](docs/monitoring.md)
-- [Remote management](docs/remote-management.md): Cockpit, WireGuard, SSH,
+- [Status and alerts](docs/05-monitoring.md)
+- [Remote management](docs/06-remote-management.md): Cockpit, WireGuard, SSH,
   Veyon
-- [Remote Mac](docs/remote-mac.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Commands](docs/commands.md): every playbook and server command
+- [Remote Mac](docs/07-remote-mac.md)
+- [Troubleshooting](docs/08-troubleshooting.md)
+- [Commands](docs/09-commands.md): every playbook and server command
 
 Every variable is documented, with its default, in `roles/*/defaults/main.yml`.
 

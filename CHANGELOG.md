@@ -7,6 +7,8 @@
   #1151644, Ubuntu LP #2166430). A dnsmasq pin is no longer needed for this.
 - Changing `netstation_dnsmasq_version` from one pinned version to another
   works: the server role used to fail on the hold of the old version.
+- The configuration and troubleshooting docs explain the dnsmasq hang and
+  when a pin still makes sense.
 
 ## 0.9.5 (2026-11-16)
 

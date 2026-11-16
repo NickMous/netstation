@@ -138,13 +138,18 @@ netstation_firewall_extra_rules:     # nftables rules for incoming traffic
 The firewall only lets in SSH, network boot, NFS, and Cockpit, WireGuard and
 RustDesk when they're on.
 
-If dnsmasq hangs in proxy mode (dnsmasq 2.91 in Debian 13 does), pin the
-version from Debian 12:
+dnsmasq 2.91 to 2.93 (Debian 13 has 2.91) hang in proxy mode when the proxy
+`dhcp-range` has a tag. netstation's configuration leaves the tag out, so
+these versions work and no pin is needed. If a dnsmasq version gives trouble
+anyway, pin one that works, for example the one from Debian 12:
 
 ```yaml
 netstation_dnsmasq_version: "2.90-4~deb12u2"
 netstation_dnsmasq_suite: bookworm
 ```
+
+To go back to Debian's own version, remove both lines (or change to another
+pinned version) and run `server`.
 
 ## Clients
 

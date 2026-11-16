@@ -38,108 +38,36 @@ every logout starts clean. All maintenance happens in one place, on the server.
                  + a RAM overlay, so every boot starts clean
 ```
 
-| Playbook | What it does |
-|---|---|
-| `nickmous.netstation.installer_iso` | Build an unattended Debian installer ISO for the server |
-| `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, security updates, alerts, WireGuard, Cockpit, RustDesk) |
-| `nickmous.netstation.image_build` | Build a new staging image from scratch |
-| `nickmous.netstation.image_diff` | Show what changed between production and staging |
-| `nickmous.netstation.image_promote` | Make the staging image the production image |
-| `nickmous.netstation.image_rollback` | Restore a previous production image |
-| `nickmous.netstation.status` | Images, booted clients, services |
-| `nickmous.netstation.clients` | The clients that are on: IP, MAC and name |
-| `nickmous.netstation.wake` | Wake clients with Wake-on-LAN |
-| `nickmous.netstation.veyon_computers` | Write the booted clients to a CSV file for Veyon Master |
-| `nickmous.netstation.mac_handout` | Write the setup script and manual for Remote Mac users |
+Your settings live in a private configuration repository (an Ansible
+inventory). From there you run the playbooks of this collection against the
+server, which builds the client images itself.
 
-On the server, the same actions are available as `sudo netstation-image
-build|diff|promote|rollback|status`.
-
-## Getting started
-
-You need a machine to run Ansible from (Debian/Ubuntu below), a server or VM
-for netstation, and clients that can network-boot. Everything else is set up
-by the playbooks.
-
-**0. Your machine.** Install the tools and start a private configuration
-repository from `examples/`:
+## Quick look
 
 ```bash
-sudo apt install ansible git xorriso
-cp -r examples ~/my-netstation && cd ~/my-netstation
-git init
-ansible-galaxy collection install -r requirements.yml
+ansible-playbook nickmous.netstation.installer_iso    # unattended Debian installer for the server
+ansible-playbook nickmous.netstation.server           # set up or repair the server
+ansible-playbook nickmous.netstation.image_build      # build a staging image
+ansible-playbook nickmous.netstation.image_promote    # make it production
 ```
 
-**1. Settings.** Edit `inventory/hosts.yml` (the server's name, address and
-admin user) and `inventory/group_vars/netstation_servers/main.yml`. Then
-create the vault with the admin password:
+## Documentation
 
-```bash
-cp inventory/group_vars/netstation_servers/vault.yml.example inventory/group_vars/netstation_servers/vault.yml
-nano inventory/group_vars/netstation_servers/vault.yml
-ansible-vault encrypt inventory/group_vars/netstation_servers/vault.yml
-```
+- [Getting started](docs/getting-started.md): from an empty machine to the
+  first client booting
+- [Configuration](docs/configuration.md)
+- [Updating the clients](docs/updating-clients.md): build, test, promote,
+  roll back
+- [Managing clients](docs/clients.md): test clients, Wake-on-LAN, power
+  schedule
+- [Status and alerts](docs/monitoring.md)
+- [Remote management](docs/remote-management.md): Cockpit, WireGuard, SSH,
+  Veyon
+- [Remote Mac](docs/remote-mac.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Commands](docs/commands.md): every playbook and server command
 
-**2. Installer.** Build an ISO that installs Debian without any questions,
-with the admin account, your SSH key and the network settings from step 1:
-
-```bash
-ansible-playbook nickmous.netstation.installer_iso --ask-vault-pass
-```
-
-The ISO ends up in `build/<server name>.iso`.
-
-**3. Install the server.** Boot the server or VM from the ISO. It erases the
-first disk, installs Debian and reboots, which takes about ten minutes.
-Remove the ISO afterwards. For a Hyper-V VM: Generation 2, with Secure Boot
-on the "Microsoft UEFI Certificate Authority" template (or off).
-
-**4. Set up netstation and build the first image:**
-
-```bash
-ansible-playbook nickmous.netstation.server --ask-vault-pass
-ansible-playbook nickmous.netstation.image_build --ask-vault-pass
-ansible-playbook nickmous.netstation.image_promote --ask-vault-pass
-```
-
-**5. Boot a client** from the network. PXE boot must be enabled in its
-BIOS/UEFI and Secure Boot disabled.
-
-Requirements: the server must be on the same network segment as the clients.
-With `netstation_dhcp_mode: proxy` (the default), another DHCP server on that
-network hands out the IP addresses.
-
-## Configuration
-
-Every variable is documented, with its default, in `roles/*/defaults/main.yml`:
-
-- `roles/common/defaults/main.yml`: image names, session user, Debian release,
-  locale, Veyon, power schedule, Remote Mac on/off
-- `roles/server/defaults/main.yml`: DHCP mode, NAT for two-network-card
-  setups, known clients and test clients, extra `ltsp.conf` settings
-- `roles/image/defaults/main.yml`: homepage, wallpaper, desktop shortcuts,
-  idle logout, RDP options and pass-through, time servers, Firefox policies,
-  packages, extra files, scheduled builds, Remote Mac dialogs and RustDesk
-  client
-- `roles/installer/defaults/main.yml`: admin account, network settings and
-  extra network cards for the installed server
-- `roles/alerts/defaults/main.yml`: Pushover keys and what to alert on
-- `roles/rustdesk_server/defaults/main.yml`: RustDesk server version and key,
-  the Mac handout and office mode
-- `roles/wireguard/defaults/main.yml` and `roles/cockpit/defaults/main.yml`
-
-All variables share the `netstation_` prefix, so you can set them in one
-`group_vars` file.
-
-## Notes
-
-- The server manages `/etc/ltsp/ltsp.conf` and `/etc/dnsmasq.d/ltsp-dnsmasq.conf`.
-  Don't run `ltsp dnsmasq` by hand; it would overwrite the HTTP-boot setup.
-- The session user exists only on the server, with an empty password. LTSP
-  merges it into each client, where its home folder lives in RAM.
-- [docs/runbook.md](docs/runbook.md) covers day-to-day operation and
-  troubleshooting.
+Every variable is documented, with its default, in `roles/*/defaults/main.yml`.
 
 ## License
 

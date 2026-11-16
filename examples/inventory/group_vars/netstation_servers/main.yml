@@ -56,7 +56,7 @@ netstation_veyon_public_keys:
 
 # --- Remote Mac ------------------------------------------------------------
 
-# People control their own Mac from a client with RustDesk. See "Remote Mac"
-# in the runbook.
+# People control their own Mac from a client with RustDesk. See
+# docs/remote-mac.md.
 # netstation_remote_mac_enabled: true
 # netstation_rustdesk_private_key: "{{ vault_rustdesk_private_key }}"

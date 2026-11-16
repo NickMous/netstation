@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.4 (2026-11-16)
+
+- The documentation is split into pages in `docs/`: getting started,
+  configuration, updating the clients, managing clients, status and alerts,
+  remote management, Remote Mac, troubleshooting and commands. They replace
+  `docs/runbook.md`, and the README is now a short introduction that links to
+  them. No changes to the roles or playbooks.
+
 ## 0.9.3 (2026-11-16)
 
 - A published release, or a change to the README, `docs/`, `examples/` or

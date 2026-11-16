@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.3 (2026-11-16)
+
+- A published release, or a change to the README, `docs/`, `examples/` or
+  `imlostincode.json` on main, asks imlostincode.com to rebuild, so the docs
+  there stay current. No changes to the roles or playbooks.
+
 ## 0.9.2 (2026-11-16)
 
 - The repository has an `imlostincode.json` with the collection's card for

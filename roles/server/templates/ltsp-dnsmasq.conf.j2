@@ -25,7 +25,7 @@ dhcp-option=option:dns-server,{{ netstation_dhcp_dns_servers | join(',') }}
 # Proxy DHCP: another server hands out IP addresses, this one only adds
 # the network-boot information.
 {% for subnet in netstation_proxy_subnets %}
-dhcp-range=set:proxy,{{ subnet.network }},proxy,{{ subnet.netmask }}
+dhcp-range={{ subnet.network }},proxy,{{ subnet.netmask }}
 {% endfor %}
 {% endif %}
 
@@ -45,10 +45,14 @@ tag-if=set:ipxe,tag:ipxe-http,tag:ipxe-menu,tag:ipxe-efi
 
 {% set ipxe_script = 'ltsp/netstation.ipxe' if netstation_http_boot else 'ltsp/ltsp.ipxe' %}
 # Firmware PXE loads iPXE; iPXE then loads {{ ipxe_script }}.
-pxe-service=tag:proxy,tag:!ipxe,X86PC,"undionly.kpxe",ltsp/undionly.kpxe
-pxe-service=tag:proxy,tag:!ipxe,X86-64_EFI,"snponly.efi",ltsp/snponly.efi
-pxe-service=tag:proxy,tag:ipxe,X86PC,"ltsp.ipxe",{{ ipxe_script }}
-pxe-service=tag:proxy,tag:ipxe,X86-64_EFI,"ltsp.ipxe",{{ ipxe_script }}
+{% if netstation_dhcp_mode != 'full' %}
+# No set: tag on the proxy dhcp-range: dnsmasq 2.91 to 2.93 hang on the second
+# proxy request when it has one (Debian #1151644, Ubuntu LP #2166430).
+pxe-service=tag:!ipxe,X86PC,"undionly.kpxe",ltsp/undionly.kpxe
+pxe-service=tag:!ipxe,X86-64_EFI,"snponly.efi",ltsp/snponly.efi
+pxe-service=tag:ipxe,X86PC,"ltsp.ipxe",{{ ipxe_script }}
+pxe-service=tag:ipxe,X86-64_EFI,"ltsp.ipxe",{{ ipxe_script }}
+{% endif %}
 dhcp-boot=tag:!ipxe,tag:X86PC,ltsp/undionly.kpxe
 dhcp-boot=tag:!ipxe,tag:X86-64_EFI,ltsp/snponly.efi
 dhcp-boot=tag:ipxe,{{ ipxe_script }}

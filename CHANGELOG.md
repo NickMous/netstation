@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- dnsmasq 2.91 to 2.93 no longer hang in proxy mode: the proxy `dhcp-range`
+  has no `set:proxy` tag any more, which is what triggered the hang (Debian
+  #1151644, Ubuntu LP #2166430). A dnsmasq pin is no longer needed for this.
 - Changing `netstation_dnsmasq_version` from one pinned version to another
   works: the server role used to fail on the hold of the old version.
 

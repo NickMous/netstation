@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.5 (2026-11-16)
+
+- The pages in `docs/` start with a number, so imlostincode.com shows them
+  in reading order. `docs/index.md` is gone: the README is the overview. No
+  changes to the roles or playbooks.
+
 ## 0.9.4 (2026-11-16)
 
 - The documentation is split into pages in `docs/`: getting started,

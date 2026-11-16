@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.6 (2026-11-16)
 
 - dnsmasq 2.91 to 2.93 no longer hang in proxy mode: the proxy `dhcp-range`
   has no `set:proxy` tag any more, which is what triggered the hang (Debian

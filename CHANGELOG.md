@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2 (2026-11-16)
+
+- The repository has an `imlostincode.json` with the collection's card for
+  the imlostincode.com website, where the docs will be. No changes to the
+  roles or playbooks.
+
 ## 0.9.1 (2026-11-12)
 
 - Signing out of Windows inside a Remote Desktop session (xfreerdp3 exit

@@ -59,6 +59,8 @@
     state: "{{ 'latest' if netstation_dnsmasq_version | length == 0 else 'present' }}"
     install_recommends: false
     allow_downgrade: true
+    # Going from one pinned version to another changes the held packages.
+    allow_change_held_packages: true
     update_cache: "{{ netstation_dnsmasq_source | default({}) is changed }}"
   notify: Restart dnsmasq
 

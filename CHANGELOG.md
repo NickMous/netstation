@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Changing `netstation_dnsmasq_version` from one pinned version to another
+  works: the server role used to fail on the hold of the old version.
+
 ## 0.9.5 (2026-11-16)
 
 - The pages in `docs/` start with a number, so imlostincode.com shows them

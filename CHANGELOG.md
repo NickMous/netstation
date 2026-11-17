@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- `netstation_desktop: plasma` gives the clients KDE Plasma (X11 session)
+  instead of XFCE, to try out. It has Plasma's default panel, never locks the
+  screen, sets `netstation_wallpaper` at login, and works with the idle
+  logout and Remote Mac. `netstation_panel_show_address` only works with
+  XFCE. The XFCE packages moved from `netstation_image_packages_desktop` to
+  `netstation_image_packages_desktop_xfce`. Needs a new image.
+
 ## 0.9.8 (2026-11-17)
 
 - `ansible-playbook nickmous.netstation.server --tags clients` only applies

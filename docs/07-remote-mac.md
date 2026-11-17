@@ -14,7 +14,7 @@ At the client: click the icon, type the Mac's RustDesk ID, then the password
 RustDesk on the Mac shows.
 
 - Each Mac screen opens full screen on its own client screen.
-- The XFCE panels are gone during the session.
+- The panels are gone during the session.
 - Alt and the Windows key swap places, so the key next to the space bar is
   Cmd (`netstation_remote_mac_swap_alt_cmd`).
 - The Mac's sound plays on the client (`netstation_remote_mac_sound`).

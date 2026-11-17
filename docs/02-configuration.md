@@ -57,6 +57,18 @@ netstation_desktop_shortcuts:
     icon: firefox-esr            # optional: an icon name or an icon file path
 ```
 
+**Desktop.** XFCE by default. KDE Plasma (its X11 session) is being tried
+out:
+
+```yaml
+netstation_desktop: plasma        # xfce (the default) or plasma
+```
+
+Plasma has its own default panel, without the name and address
+(`netstation_panel_show_address` only works with XFCE). The screen never
+locks, and screens are still put side by side by netstation, not by Plasma.
+The image is larger than with XFCE.
+
 **Idle logout.** Log the session out after a while without keyboard or mouse
 input, so the next person gets a fresh desktop. An RDP session only
 disconnects and can be resumed. An open [Remote Mac](07-remote-mac.md)
@@ -69,7 +81,7 @@ netstation_idle_logout_warning_seconds: 60
 
 **Screens.** All connected screens are put side by side
 (`netstation_displays_side_by_side`), also one switched on after the client
-started. Turning this off lets XFCE mirror such a screen, which xfreerdp3
+started. Turning this off lets the desktop mirror such a screen, which xfreerdp3
 refuses (exit code 136).
 
 ## Language and region

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.8 (2026-11-17)
 
 - `ansible-playbook nickmous.netstation.server --tags clients` only applies
   changes to `netstation_clients`: `ltsp.conf`, the client names and the wake

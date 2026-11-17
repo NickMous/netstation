@@ -41,7 +41,8 @@ netstation_desktop_shortcuts: []
 
 # Log the session out after this many minutes without keyboard or mouse
 # input, so the next person gets a fresh desktop. 0 turns it off. An RDP
-# session only disconnects and can be resumed.
+# session only disconnects and can be resumed. An open Remote Mac session
+# counts as input.
 netstation_idle_logout_minutes: 0
 # How long before the logout a warning appears; any input cancels it.
 netstation_idle_logout_warning_seconds: 60

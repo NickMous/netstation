@@ -59,7 +59,8 @@ netstation_desktop_shortcuts:
 
 **Idle logout.** Log the session out after a while without keyboard or mouse
 input, so the next person gets a fresh desktop. An RDP session only
-disconnects and can be resumed.
+disconnects and can be resumed. An open [Remote Mac](07-remote-mac.md)
+session counts as input, so it isn't logged out.
 
 ```yaml
 netstation_idle_logout_minutes: 30            # 0 = off (the default)

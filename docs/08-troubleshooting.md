@@ -91,6 +91,12 @@ Exit code 136 means a screen is mirrored: keep
   Reopen RustDesk after allowing it.
 - **Lag:** usually the Mac's Wi-Fi. A network cable fixes it; Retina
   resolutions on the Mac also cost speed.
+- **The screens go dark or the client switches off during a session:** the
+  client runs an image from before collection 0.9.7, which counted only its
+  own keyboard and mouse as use. Build and promote a new image.
+- **A client stays on in the evening:** a Mac session is still open on it.
+  Close the RustDesk windows, or the next scheduled power-off after that
+  switches it off.
 - **Alt and Cmd aren't swapped,** or still swapped after the session: log in
   to the client and check `systemctl status keyd`. A logout always stops it.
 

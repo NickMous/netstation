@@ -74,6 +74,11 @@ netstation_power_off:
 netstation_power_report: ["22:00"]        # Pushover: clients still on
 ```
 
+"Input" is the client's own keyboard and mouse, and an open
+[Remote Mac](07-remote-mac.md) session: that keeps the client on, also when
+someone works on the Mac with its own keyboard and mouse. A client with a Mac
+session left open stays on until someone closes the RustDesk windows.
+
 Times are systemd calendar times, so `"Mon..Fri 08:45"` works too. The wake
 reaches the clients in `netstation_clients` and every client the server has
 seen before (`/var/lib/netstation/known-clients`).

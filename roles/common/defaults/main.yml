@@ -49,6 +49,7 @@ netstation_power_wake: []
 #   - at: "10:00"             # not used since it was switched on
 #   - at: "18:30"
 #     idle_minutes: 15        # or: no keyboard or mouse input for 15 minutes
+# An open Remote Mac session counts as input, so it keeps the client on.
 netstation_power_off: []
 # Send a Pushover alert listing the clients that are still on.
 netstation_power_report: []

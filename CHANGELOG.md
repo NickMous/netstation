@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- A Mac session keeps the client awake. Someone who uses the Mac's own
+  keyboard and mouse gave the client no input, so its screens blanked after
+  10 minutes and the idle logout and idle power-off counted it as unused.
+  `netstation-mac-open` now resets the X idle time every 30 seconds while the
+  session is open. Needs a new image.
+
 ## 0.9.6 (2026-11-16)
 
 - dnsmasq 2.91 to 2.93 no longer hang in proxy mode: the proxy `dhcp-range`

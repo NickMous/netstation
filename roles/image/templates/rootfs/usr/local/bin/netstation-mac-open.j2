@@ -10,6 +10,9 @@
 # so they don't show on top of the Mac's screens.
 {% endif %}
 # Everything comes back when the last RustDesk window closes.
+# While the session is open the client counts as in use, also when the Mac's
+# own keyboard and mouse are used: the screens don't blank and the idle
+# logout and idle power-off leave it alone.
 # RustDesk's output goes to the journal (journalctl -t netstation-mac).
 set -u
 
@@ -107,11 +110,20 @@ fi
 
 # Then until the last one closes. RustDesk replaces windows when it puts the
 # Mac's screens in their own windows, so a window must be gone a few seconds.
+# Meanwhile, reset the X server's idle time every 30 seconds: someone using
+# the Mac's own keyboard and mouse gives the client no input, and the screen
+# blanking, netstation-idle-logout and netstation-activity go by that time.
 gone=0
+since_reset=30
 while [ "$gone" -lt 3 ]; do
     sleep 1
     if session_windows; then
         gone=0
+        since_reset=$((since_reset + 1))
+        if [ "$since_reset" -ge 30 ]; then
+            xset s reset 2>/dev/null
+            since_reset=0
+        fi
     else
         gone=$((gone + 1))
     fi

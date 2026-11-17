@@ -18,6 +18,11 @@ RustDesk on the Mac shows.
 - Alt and the Windows key swap places, so the key next to the space bar is
   Cmd (`netstation_remote_mac_swap_alt_cmd`).
 - The Mac's sound plays on the client (`netstation_remote_mac_sound`).
+- The client counts as in use for as long as the session is open, also when
+  someone uses the Mac's own keyboard and mouse: the screens don't blank, and
+  the idle logout and idle power-off (`netstation_idle_logout_minutes`,
+  `netstation_power_off`) leave it alone. A session left open keeps the client
+  on; it goes off once the RustDesk windows are closed.
 
 Close the RustDesk windows (the toolbar at the top of the screen) to get the
 desktop back.

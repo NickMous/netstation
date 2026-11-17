@@ -1,12 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.9.7 (2026-11-17)
 
 - A Mac session keeps the client awake. Someone who uses the Mac's own
   keyboard and mouse gave the client no input, so its screens blanked after
   10 minutes and the idle logout and idle power-off counted it as unused.
   `netstation-mac-open` now resets the X idle time every 30 seconds while the
-  session is open. Needs a new image.
+  session is open. Needs a new image. A session left open keeps the client
+  on until its RustDesk windows are closed.
+- The Remote Mac, configuration, power schedule and troubleshooting docs
+  describe this.
 
 ## 0.9.6 (2026-11-16)
 

@@ -1,14 +1,24 @@
 ---
+# The LightDM session of each netstation_desktop.
+netstation_desktop_sessions:
+  xfce: xfce
+  plasma: plasmax11
+netstation_desktop_session: "{{ netstation_desktop_sessions[netstation_desktop] }}"
+
+# The panel address item only exists in the XFCE panel.
+netstation_xfce_panel_address: "{{ netstation_desktop == 'xfce' and netstation_panel_show_address }}"
+
 netstation_wallpaper_file: "wallpaper{{ netstation_wallpaper | splitext | last }}"
 
 netstation_image_packages: >-
   {{ (netstation_image_packages_system
       + netstation_image_packages_firmware
       + netstation_image_packages_desktop
+      + lookup('vars', 'netstation_image_packages_desktop_' ~ netstation_desktop)
       + netstation_image_packages_apps
       + (netstation_image_packages_veyon if netstation_veyon_enabled else [])
       + (['firefox-esr-l10n-' ~ netstation_firefox_language] if netstation_firefox_language | length > 0 else [])
-      + (['xfce4-genmon-plugin'] if netstation_panel_show_address else [])
+      + (['xfce4-genmon-plugin'] if netstation_xfce_panel_address | bool else [])
       + (['ethtool'] if netstation_wake_on_lan else [])
       + (['x11-xserver-utils'] if netstation_displays_side_by_side or netstation_remote_mac_enabled else [])
       + (['plymouth', 'plymouth-themes'] if netstation_boot_splash else [])
@@ -51,18 +61,19 @@ netstation_rootfs_templates:
     mode: "0755"
     when: "{{ netstation_displays_side_by_side }}"
   - dest: etc/xdg/xfce4/xfconf/xfce-perchannel-xml/displays.xml
-    when: "{{ netstation_displays_side_by_side }}"
+    when: "{{ netstation_desktop == 'xfce' and netstation_displays_side_by_side }}"
   - dest: etc/xdg/mimeapps.list
   - dest: etc/wireplumber/wireplumber.conf.d/50-netstation-volume.conf
     when: "{{ netstation_audio_volume | default('', true) | string | length > 0 }}"
   - dest: etc/systemd/timesyncd.conf.d/netstation.conf
     when: "{{ netstation_ntp_servers | length > 0 }}"
   - dest: etc/xdg/xfce4/panel/default.xml
+    when: "{{ netstation_desktop == 'xfce' }}"
   - dest: etc/xdg/xfce4/panel/genmon-19.rc
-    when: "{{ netstation_panel_show_address }}"
+    when: "{{ netstation_xfce_panel_address | bool }}"
   - dest: usr/local/bin/netstation-panel-address
     mode: "0755"
-    when: "{{ netstation_panel_show_address }}"
+    when: "{{ netstation_xfce_panel_address | bool }}"
   - dest: etc/xdg/autostart/netstation-idle-logout.desktop
     when: "{{ netstation_idle_logout_minutes | int > 0 }}"
   - dest: usr/local/bin/netstation-idle-logout

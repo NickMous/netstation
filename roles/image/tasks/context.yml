@@ -2,6 +2,12 @@
 # Everything the image build needs is rendered into a fresh folder, then
 # swapped in. The scheduled staging build reuses the last rendered context.
 
+- name: Check the desktop
+  ansible.builtin.assert:
+    that: netstation_desktop in netstation_desktop_sessions
+    fail_msg: "netstation_desktop is {{ netstation_desktop }}; pick from: {{ netstation_desktop_sessions.keys() | join(', ') }}."
+    quiet: true
+
 - name: Set the build context paths
   ansible.builtin.set_fact:
     netstation_context_dir: "{{ netstation_state_dir }}/context"

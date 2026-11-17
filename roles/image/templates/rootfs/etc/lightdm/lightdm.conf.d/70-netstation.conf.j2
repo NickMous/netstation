@@ -8,8 +8,8 @@ minimum-vt=1
 
 {% endif %}
 [Seat:*]
-user-session=xfce
-autologin-session=xfce
+user-session={{ netstation_desktop_session }}
+autologin-session={{ netstation_desktop_session }}
 {% if netstation_boot_splash %}
 xserver-command=X -background none
 {% endif %}

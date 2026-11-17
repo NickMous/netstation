@@ -21,6 +21,11 @@ netstation_initrd_gpu_drivers: []
 
 netstation_numlock: true
 
+# The desktop: xfce or plasma (KDE Plasma, X11 session). Plasma is still being
+# tried out: it has the default Plasma panel, without
+# netstation_panel_show_address.
+netstation_desktop: xfce
+
 # Put all connected screens side by side, also a screen switched on after the
 # client started. Off leaves it to XFCE, which mirrors such a screen; xfreerdp3
 # then refuses to connect (exit code 136).
@@ -175,13 +180,6 @@ netstation_image_packages_desktop:
   - xserver-xorg-input-libinput
   - lightdm
   - lightdm-gtk-greeter
-  - xfce4-session
-  - xfwm4
-  - xfdesktop4
-  - xfce4-panel
-  - xfce4-settings
-  - xfce4-terminal
-  - thunar
   - dbus-user-session
   # Lets the user at the client shut down and restart it from the desktop.
   - polkitd
@@ -189,14 +187,35 @@ netstation_image_packages_desktop:
   - fonts-dejavu-core
   - desktop-base
   - pipewire-audio
-  # Volume icon in the panel (also makes the keyboard's volume keys work),
-  # and the mixer it opens to pick the output device.
-  - xfce4-pulseaudio-plugin
+  # The mixer to pick the output device.
   - pavucontrol
   - numlockx
   - xdg-utils
   - shared-mime-info
   - desktop-file-utils
+
+# The packages of each netstation_desktop.
+netstation_image_packages_desktop_xfce:
+  - xfce4-session
+  - xfwm4
+  - xfdesktop4
+  - xfce4-panel
+  - xfce4-settings
+  - xfce4-terminal
+  - thunar
+  # Volume icon in the panel (also makes the keyboard's volume keys work).
+  - xfce4-pulseaudio-plugin
+netstation_image_packages_desktop_plasma:
+  - plasma-desktop
+  # The X11 session: xdotool, xprintidle and xrandr need X11.
+  - kwin-x11
+  # Volume icon in the panel (also makes the keyboard's volume keys work).
+  - plasma-pa
+  - konsole
+  - dolphin
+  - systemsettings
+  # Left out on purpose: kscreen, which would arrange the screens instead of
+  # netstation-displays, and powerdevil, which suspends an idle client.
 
 netstation_image_packages_apps:
   - firefox-esr

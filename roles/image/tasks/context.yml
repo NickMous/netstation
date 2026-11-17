@@ -4,8 +4,11 @@
 
 - name: Check the desktop
   ansible.builtin.assert:
-    that: netstation_desktop in netstation_desktop_sessions
-    fail_msg: "netstation_desktop is {{ netstation_desktop }}; pick from: {{ netstation_desktop_sessions.keys() | join(', ') }}."
+    that:
+      - netstation_desktops is sequence and netstation_desktops is not string
+      - netstation_desktops | length > 0
+      - netstation_desktops | difference(netstation_desktop_sessions.keys()) | length == 0
+    fail_msg: "netstation_desktops must be a list with one or more of: {{ netstation_desktop_sessions.keys() | join(', ') }}."
     quiet: true
 
 - name: Set the build context paths

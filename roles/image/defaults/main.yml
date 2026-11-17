@@ -21,10 +21,13 @@ netstation_initrd_gpu_drivers: []
 
 netstation_numlock: true
 
-# The desktop: xfce or plasma (KDE Plasma, X11 session). Plasma is still being
-# tried out: it has the default Plasma panel, without
-# netstation_panel_show_address.
-netstation_desktop: xfce
+# The desktops in the image: xfce and/or plasma (KDE Plasma, X11 session).
+# The first one is what the automatic login gets, and what the login screen
+# picks for a user who hasn't chosen yet. With more than one, users with their
+# own account pick one on the login screen; it's remembered in their home
+# folder. Plasma is still being tried out: it has Plasma's default panel,
+# without netstation_panel_show_address.
+netstation_desktops: [xfce]
 
 # Put all connected screens side by side, also a screen switched on after the
 # client started. Off leaves it to the desktop, which mirrors such a screen; xfreerdp3
@@ -194,7 +197,7 @@ netstation_image_packages_desktop:
   - shared-mime-info
   - desktop-file-utils
 
-# The packages of each netstation_desktop.
+# The packages of each desktop in netstation_desktops.
 netstation_image_packages_desktop_xfce:
   - xfce4-session
   - xfwm4

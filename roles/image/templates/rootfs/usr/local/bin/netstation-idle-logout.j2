@@ -36,13 +36,18 @@ while sleep 15; do
     kill "$dialog" 2>/dev/null
 
     if [ "$left" -eq 0 ]; then
-{% if netstation_desktop == 'plasma' %}
-        qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout
+        case ${XDG_CURRENT_DESKTOP:-} in
+{% if netstation_plasma | bool %}
+        *KDE*)
+            qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout ;;
+{% endif %}
+{% if netstation_xfce | bool %}
+        *XFCE*)
+            xfce4-session-logout --logout --fast ;;
+{% endif %}
+        esac
         # A program that holds up the logout doesn't keep the session open.
         sleep 30
         exec loginctl terminate-session "${XDG_SESSION_ID:-}"
-{% else %}
-        exec xfce4-session-logout --logout --fast
-{% endif %}
     fi
 done

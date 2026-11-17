@@ -1,12 +1,14 @@
 ---
-# The LightDM session of each netstation_desktop.
+# The LightDM session of each desktop in netstation_desktops.
 netstation_desktop_sessions:
   xfce: xfce
   plasma: plasmax11
-netstation_desktop_session: "{{ netstation_desktop_sessions[netstation_desktop] }}"
+netstation_desktop_session: "{{ netstation_desktop_sessions[netstation_desktops | first] }}"
+netstation_xfce: "{{ 'xfce' in netstation_desktops }}"
+netstation_plasma: "{{ 'plasma' in netstation_desktops }}"
 
 # The panel address item only exists in the XFCE panel.
-netstation_xfce_panel_address: "{{ netstation_desktop == 'xfce' and netstation_panel_show_address }}"
+netstation_xfce_panel_address: "{{ netstation_xfce | bool and netstation_panel_show_address }}"
 
 netstation_wallpaper_file: "wallpaper{{ netstation_wallpaper | splitext | last }}"
 
@@ -14,7 +16,7 @@ netstation_image_packages: >-
   {{ (netstation_image_packages_system
       + netstation_image_packages_firmware
       + netstation_image_packages_desktop
-      + lookup('vars', 'netstation_image_packages_desktop_' ~ netstation_desktop)
+      + query('vars', *(netstation_desktops | map('regex_replace', '^', 'netstation_image_packages_desktop_'))) | flatten
       + netstation_image_packages_apps
       + (netstation_image_packages_veyon if netstation_veyon_enabled else [])
       + (['firefox-esr-l10n-' ~ netstation_firefox_language] if netstation_firefox_language | length > 0 else [])
@@ -61,21 +63,21 @@ netstation_rootfs_templates:
     mode: "0755"
     when: "{{ netstation_displays_side_by_side }}"
   - dest: etc/xdg/xfce4/xfconf/xfce-perchannel-xml/displays.xml
-    when: "{{ netstation_desktop == 'xfce' and netstation_displays_side_by_side }}"
+    when: "{{ netstation_xfce | bool and netstation_displays_side_by_side }}"
   - dest: etc/xdg/mimeapps.list
   - dest: etc/xdg/kscreenlockerrc
-    when: "{{ netstation_desktop == 'plasma' }}"
+    when: "{{ netstation_plasma | bool }}"
   - dest: etc/xdg/autostart/netstation-plasma-wallpaper.desktop
-    when: "{{ netstation_desktop == 'plasma' and netstation_wallpaper | length > 0 }}"
+    when: "{{ netstation_plasma | bool and netstation_wallpaper | length > 0 }}"
   - dest: usr/local/bin/netstation-plasma-wallpaper
     mode: "0755"
-    when: "{{ netstation_desktop == 'plasma' and netstation_wallpaper | length > 0 }}"
+    when: "{{ netstation_plasma | bool and netstation_wallpaper | length > 0 }}"
   - dest: etc/wireplumber/wireplumber.conf.d/50-netstation-volume.conf
     when: "{{ netstation_audio_volume | default('', true) | string | length > 0 }}"
   - dest: etc/systemd/timesyncd.conf.d/netstation.conf
     when: "{{ netstation_ntp_servers | length > 0 }}"
   - dest: etc/xdg/xfce4/panel/default.xml
-    when: "{{ netstation_desktop == 'xfce' }}"
+    when: "{{ netstation_xfce | bool }}"
   - dest: etc/xdg/xfce4/panel/genmon-19.rc
     when: "{{ netstation_xfce_panel_address | bool }}"
   - dest: usr/local/bin/netstation-panel-address

@@ -57,17 +57,23 @@ netstation_desktop_shortcuts:
     icon: firefox-esr            # optional: an icon name or an icon file path
 ```
 
-**Desktop.** XFCE by default. KDE Plasma (its X11 session) is being tried
-out:
+**Desktops.** XFCE by default. KDE Plasma (its X11 session) is being tried
+out, on its own or next to XFCE:
 
 ```yaml
-netstation_desktop: plasma        # xfce (the default) or plasma
+netstation_desktops: [xfce, plasma]   # the first one is for the automatic login
 ```
 
+The automatic login gets the first one. Users with their own account pick a
+desktop on the login screen; it's remembered in their home folder, and the
+first one is preselected until they do. Each desktop adds to the image's size,
+not to the boot time: a client only reads what it uses.
+
 Plasma has its own default panel, without the name and address
-(`netstation_panel_show_address` only works with XFCE). The screen never
+(`netstation_panel_show_address` only works with XFCE). Its screen never
 locks, and screens are still put side by side by netstation, not by Plasma.
-The image is larger than with XFCE.
+The netstation wallpaper is set once per home folder, so users with their own
+account can pick another one.
 
 **Idle logout.** Log the session out after a while without keyboard or mouse
 input, so the next person gets a fresh desktop. An RDP session only

@@ -1,11 +1,17 @@
 #!/bin/sh
 # {{ ansible_managed }}
-# Plasma: sets the netstation wallpaper on every screen. The home folder is
-# fresh at every login, so this runs at every login. plasmashell may still be
-# starting, so it tries for up to a minute.
+# Plasma: sets the netstation wallpaper on every screen, once per home
+# folder. The automatic login gets a fresh home every time, so it always gets
+# it; users with their own account keep the wallpaper they pick themselves.
+# plasmashell may still be starting, so it tries for up to a minute.
 wallpaper=/usr/share/backgrounds/netstation/{{ netstation_wallpaper_file | quote }}
+done_file=${XDG_CONFIG_HOME:-$HOME/.config}/netstation-wallpaper-set
+[ -e "$done_file" ] && exit 0
 for _ in $(seq 30); do
-    plasma-apply-wallpaperimage "$wallpaper" >/dev/null 2>&1 && exit 0
+    if plasma-apply-wallpaperimage "$wallpaper" >/dev/null 2>&1; then
+        mkdir -p "$(dirname "$done_file")" && touch "$done_file"
+        exit 0
+    fi
     sleep 2
 done
 logger -t netstation-wallpaper -- "plasma-apply-wallpaperimage $wallpaper failed"

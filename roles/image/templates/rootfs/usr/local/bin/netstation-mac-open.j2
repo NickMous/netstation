@@ -49,32 +49,25 @@ session_windows() {
     return 1
 }
 
-# The panels would show on top of the Mac's screens.
-{% if netstation_desktop == 'plasma' %}
-# plasmashell draws them, and the desktop.
+# The panels would show on top of the Mac's screens. In Plasma, plasmashell
+# draws them (and the desktop); in XFCE, xfce4-panel.
+panel_stopped=""
 stop_panels() {
-    if systemctl --user -q is-active plasma-plasmashell.service; then
-        systemctl --user stop plasma-plasmashell.service
+    if systemctl --user -q is-active plasma-plasmashell.service 2>/dev/null; then
+        systemctl --user stop plasma-plasmashell.service && panel_stopped=plasma-service
     elif pgrep -u "$UID" -x plasmashell >/dev/null; then
-        qdbus6 org.kde.plasmashell /MainApplication quit
-    else
-        return 1
+        qdbus6 org.kde.plasmashell /MainApplication quit && panel_stopped=plasmashell
+    elif pgrep -u "$UID" -x xfce4-panel >/dev/null; then
+        xfce4-panel --quit && panel_stopped=xfce4-panel
     fi
 }
 start_panels() {
-    systemctl --user start plasma-plasmashell.service 2>/dev/null ||
-        setsid -f plasmashell >/dev/null 2>&1 9>&-
+    case $panel_stopped in
+    plasma-service) systemctl --user start plasma-plasmashell.service ;;
+    plasmashell | xfce4-panel) setsid -f "$panel_stopped" >/dev/null 2>&1 9>&- ;;
+    esac
 }
-{% else %}
-stop_panels() {
-    pgrep -u "$UID" -x xfce4-panel >/dev/null && xfce4-panel --quit
-}
-start_panels() {
-    setsid -f xfce4-panel >/dev/null 2>&1 9>&-
-}
-{% endif %}
 
-panel_stopped=false
 {% if netstation_remote_mac_swap_alt_cmd %}
 keys_swapped=false
 {% endif %}
@@ -85,9 +78,7 @@ restore() {
         systemctl stop keyd.service || log "Couldn't stop keyd"
     fi
 {% endif %}
-    if $panel_stopped; then
-        start_panels
-    fi
+    start_panels
     log "Session with $mac_id ended"
 }
 trap restore EXIT
@@ -96,7 +87,7 @@ trap 'exit 0' INT TERM HUP
 # A RustDesk left over from before would take the connection instead.
 pkill -u "$UID" -x rustdesk 2>/dev/null && sleep 1
 
-stop_panels && panel_stopped=true
+stop_panels
 {% if netstation_remote_mac_swap_alt_cmd %}
 
 # keyd takes over the keyboard; give the Enter of the dialog time to come up.

@@ -1,13 +1,18 @@
 # {{ ansible_managed }}
 # LTSP adds autologin-user from AUTOLOGIN in ltsp.conf at boot.
+[LightDM]
+# Only X11 sessions on the login screen: the Remote Mac session and the idle
+# checks need X11.
+sessions-directory=/usr/share/lightdm/sessions:/usr/share/xsessions
 {% if netstation_boot_splash %}
 # X starts on the boot splash's console and keeps the splash on screen until
 # the desktop draws, instead of a black screen in between.
-[LightDM]
 minimum-vt=1
-
 {% endif %}
+
 [Seat:*]
+# The first of netstation_desktops: for the automatic login, and for users
+# who haven't picked a desktop on the login screen yet.
 user-session={{ netstation_desktop_session }}
 autologin-session={{ netstation_desktop_session }}
 {% if netstation_boot_splash %}

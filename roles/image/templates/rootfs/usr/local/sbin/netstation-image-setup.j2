@@ -19,12 +19,13 @@ echo "==> Wallpaper"
 wallpaper=/usr/share/backgrounds/netstation/{{ netstation_wallpaper_file | quote }}
 mkdir -p /usr/share/images/desktop-base
 ln -sf "$wallpaper" /usr/share/images/desktop-base/default
-{% if netstation_desktop == 'xfce' %}
+{% if netstation_xfce | bool %}
 # XFCE falls back to one of these two images on every monitor.
 mkdir -p /usr/share/backgrounds/xfce
 dpkg-divert --local --rename --add /usr/share/backgrounds/xfce/xfce-x.svg
 ln -sf "$wallpaper" /usr/share/backgrounds/xfce/xfce-x.svg
-{% else %}
+{% endif %}
+{% if netstation_plasma | bool %}
 # Plasma gets it from netstation-plasma-wallpaper at login.
 {% endif %}
 {% endif %}

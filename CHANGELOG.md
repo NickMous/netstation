@@ -2,12 +2,15 @@
 
 ## Unreleased
 
-- `netstation_desktop: plasma` gives the clients KDE Plasma (X11 session)
-  instead of XFCE, to try out. It has Plasma's default panel, never locks the
-  screen, sets `netstation_wallpaper` at login, and works with the idle
-  logout and Remote Mac. `netstation_panel_show_address` only works with
-  XFCE. The XFCE packages moved from `netstation_image_packages_desktop` to
-  `netstation_image_packages_desktop_xfce`. Needs a new image.
+- `netstation_desktops` picks the desktops in the image: `xfce` (the default)
+  and/or `plasma`, KDE Plasma in its X11 session, to try out. The automatic
+  login gets the first one; users with their own account pick one on the
+  login screen, which only offers X11 sessions. Plasma has its own default
+  panel, never locks the screen, sets `netstation_wallpaper` once per home
+  folder, and works with the idle logout and Remote Mac, which now check at
+  runtime which desktop is running. `netstation_panel_show_address` only works
+  with XFCE. The XFCE packages moved from `netstation_image_packages_desktop`
+  to `netstation_image_packages_desktop_xfce`. Needs a new image.
 
 ## 0.9.8 (2026-11-17)
 

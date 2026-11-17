@@ -10,6 +10,7 @@ changes.
 |---|---|
 | `nickmous.netstation.installer_iso` | Build an unattended Debian installer ISO for the server |
 | `nickmous.netstation.server` | Install or repair the server (LTSP, dnsmasq, NFS, nginx, image tooling, security updates, alerts, WireGuard, Cockpit, RustDesk) |
+| `nickmous.netstation.server --tags clients` | Only apply changes to `netstation_clients` |
 | `nickmous.netstation.image_build` | Build a new staging image from scratch |
 | `nickmous.netstation.image_diff` | Show what changed between production and staging |
 | `nickmous.netstation.image_promote` | Make the staging image the production image |

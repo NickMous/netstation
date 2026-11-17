@@ -4,9 +4,12 @@
   hosts: netstation_servers
   become: true
   tasks:
+    # With --tags clients only the tasks for netstation_clients run:
+    # ltsp.conf, the known clients and the wake schedules.
     - name: LTSP server
       ansible.builtin.include_role:
         name: nickmous.netstation.server
+      tags: [clients]
 
     - name: Image tooling and scheduled staging build
       ansible.builtin.include_role:

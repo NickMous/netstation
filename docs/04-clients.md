@@ -18,7 +18,15 @@ netstation_clients:
     wake: ["Mon..Fri 07:30"]    # optional: its own wake times
 ```
 
-Then run the `server` playbook.
+Then run the `server` playbook. With `--tags clients` it only applies the
+changes to `netstation_clients` (`ltsp.conf`, the client names and the wake
+times), which is quicker:
+
+```bash
+ansible-playbook nickmous.netstation.server --tags clients
+```
+
+The client picks it up at its next boot.
 
 To find a client's MAC address, switch it on and run:
 

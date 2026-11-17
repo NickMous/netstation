@@ -82,6 +82,8 @@
   notify:
     - Regenerate the LTSP initrd
     - Regenerate the iPXE menu
+  # --tags clients: only apply changes to netstation_clients.
+  tags: [clients]
 
 - name: Export the images over NFS
   ansible.builtin.command: ltsp nfs
@@ -111,6 +113,7 @@
 
 - name: Power schedule
   ansible.builtin.import_tasks: power.yml
+  tags: [clients]
 
 - name: Generate the LTSP initrd for the first time
   ansible.builtin.command: ltsp initrd

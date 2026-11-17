@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- `ansible-playbook nickmous.netstation.server --tags clients` only applies
+  changes to `netstation_clients`: `ltsp.conf`, the client names and the wake
+  times, without the rest of the server.
+
 ## 0.9.7 (2026-11-17)
 
 - A Mac session keeps the client awake. Someone who uses the Mac's own

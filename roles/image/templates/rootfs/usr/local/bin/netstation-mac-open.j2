@@ -2,7 +2,7 @@
 # {{ ansible_managed }}
 # Remote Mac: controls the user's own Mac with RustDesk, on this client's
 # keyboard, mouse and screens. Asks for the Mac's RustDesk ID; RustDesk then
-# asks for the Mac's password. During the session the XFCE panels are gone
+# asks for the Mac's password. During the session the panels are gone
 {% if netstation_remote_mac_swap_alt_cmd %}
 # and Alt and the Windows key swap places (keyd), so the key next to the
 # space bar is Cmd.
@@ -49,6 +49,31 @@ session_windows() {
     return 1
 }
 
+# The panels would show on top of the Mac's screens.
+{% if netstation_desktop == 'plasma' %}
+# plasmashell draws them, and the desktop.
+stop_panels() {
+    if systemctl --user -q is-active plasma-plasmashell.service; then
+        systemctl --user stop plasma-plasmashell.service
+    elif pgrep -u "$UID" -x plasmashell >/dev/null; then
+        qdbus6 org.kde.plasmashell /MainApplication quit
+    else
+        return 1
+    fi
+}
+start_panels() {
+    systemctl --user start plasma-plasmashell.service 2>/dev/null ||
+        setsid -f plasmashell >/dev/null 2>&1 9>&-
+}
+{% else %}
+stop_panels() {
+    pgrep -u "$UID" -x xfce4-panel >/dev/null && xfce4-panel --quit
+}
+start_panels() {
+    setsid -f xfce4-panel >/dev/null 2>&1 9>&-
+}
+{% endif %}
+
 panel_stopped=false
 {% if netstation_remote_mac_swap_alt_cmd %}
 keys_swapped=false
@@ -61,7 +86,7 @@ restore() {
     fi
 {% endif %}
     if $panel_stopped; then
-        setsid -f xfce4-panel >/dev/null 2>&1 9>&-
+        start_panels
     fi
     log "Session with $mac_id ended"
 }
@@ -71,9 +96,7 @@ trap 'exit 0' INT TERM HUP
 # A RustDesk left over from before would take the connection instead.
 pkill -u "$UID" -x rustdesk 2>/dev/null && sleep 1
 
-if pgrep -u "$UID" -x xfce4-panel >/dev/null; then
-    xfce4-panel --quit && panel_stopped=true
-fi
+stop_panels && panel_stopped=true
 {% if netstation_remote_mac_swap_alt_cmd %}
 
 # keyd takes over the keyboard; give the Enter of the dialog time to come up.

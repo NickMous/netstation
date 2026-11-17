@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# Plasma: never lock the screen. The session user has no password, so a
+# locked screen can't be unlocked.
+[Daemon]
+Autolock=false
+LockOnResume=false

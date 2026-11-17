@@ -63,6 +63,13 @@ netstation_rootfs_templates:
   - dest: etc/xdg/xfce4/xfconf/xfce-perchannel-xml/displays.xml
     when: "{{ netstation_desktop == 'xfce' and netstation_displays_side_by_side }}"
   - dest: etc/xdg/mimeapps.list
+  - dest: etc/xdg/kscreenlockerrc
+    when: "{{ netstation_desktop == 'plasma' }}"
+  - dest: etc/xdg/autostart/netstation-plasma-wallpaper.desktop
+    when: "{{ netstation_desktop == 'plasma' and netstation_wallpaper | length > 0 }}"
+  - dest: usr/local/bin/netstation-plasma-wallpaper
+    mode: "0755"
+    when: "{{ netstation_desktop == 'plasma' and netstation_wallpaper | length > 0 }}"
   - dest: etc/wireplumber/wireplumber.conf.d/50-netstation-volume.conf
     when: "{{ netstation_audio_volume | default('', true) | string | length > 0 }}"
   - dest: etc/systemd/timesyncd.conf.d/netstation.conf
